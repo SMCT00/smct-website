@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://smct00.co.kr/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://smct00.co.kr/about.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://smct00.co.kr/services.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://smct00.co.kr/records.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://smct00.co.kr/portfolio.html</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://smct00.co.kr/certifications.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://smct00.co.kr/notice.html</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://smct00.co.kr/contact.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+</urlset>
