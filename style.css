@@ -398,26 +398,8 @@ section{padding:100px 60px}
 
 
 /* ── 햄버거 메뉴 (CSS 전용 제어) ───────────────── */
-.hamburger{
-  display:none;
-  background:none;
-  border:none;
-  cursor:pointer;
-  padding:10px;
-  z-index:10001;
-  min-width:44px;
-  min-height:44px;
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
-}
-.hamburger span{
-  display:block;
-  width:24px;
-  height:2px;
-  background:#B8952A;
-  margin:5px auto;
-  pointer-events:none;
-}
+
+
 
 
 /* 메뉴 열린 상태 — 클래스로만 제어! */
@@ -452,22 +434,20 @@ section{padding:100px 60px}
   z-index:10001 !important;
 }
 @media(max-width:900px){
-  .hamburger{
-  display:none;
-  background:none;
-  border:none;
-  cursor:pointer;
-  padding:10px;
-  z-index:10001;
-  min-width:44px;
-  min-height:44px;
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
-}
+  
   .nav-links:not(.mobile-open){
     display:none !important;
   }
   .nav-cta{
     display:none !important;
   }
+}
+
+/* ── 햄버거 메뉴 버튼 ── */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:14px;z-index:10001;min-width:48px;min-height:48px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.hamburger span{display:block;width:24px;height:2px;background:#B8952A;margin:5px auto;pointer-events:none}
+@media(max-width:900px){
+  .hamburger{display:block !important}
+  .nav-cta{display:none !important}
+  .cursor,.cursor-ring{display:none !important}
 }

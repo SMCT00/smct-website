@@ -487,12 +487,13 @@ if('serviceWorker' in navigator){
 
 
 
+
 function toggleMenu(){
   var existing = document.getElementById('mobileMenu');
   if(existing){ existing.remove(); return; }
   var menu = document.createElement('div');
   menu.id = 'mobileMenu';
-  menu.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#0A0A0A;z-index:99999;padding:70px 32px 30px;display:flex;flex-direction:column;overflow-y:auto;';
+  menu.style.cssText = 'position:fixed;top:0;right:0;width:65%;height:100%;background:#0A0A0A;z-index:10000;padding:80px 24px 30px;border-left:1px solid rgba(184,149,42,.3);box-shadow:-5px 0 25px rgba(0,0,0,.5);overflow-y:auto;display:flex;flex-direction:column;';
   var items = [
     ['index.html','홈'],['about.html','회사소개'],['services.html','사업분야'],
     ['records.html','시공실적'],['portfolio.html','포트폴리오'],
@@ -502,14 +503,14 @@ function toggleMenu(){
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = item[1];
-    btn.style.cssText = 'display:block;width:100%;padding:18px 0;color:#E5E5E5;font-size:18px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;cursor:pointer;letter-spacing:3px;font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:rgba(184,149,42,.2);';
-    btn.onclick = function(){ window.location.assign(item[0]); };
+    btn.style.cssText = 'display:block;width:100%;padding:16px 0;color:#E5E5E5;font-size:16px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;cursor:pointer;letter-spacing:2px;font-family:inherit;touch-action:manipulation;';
+    btn.onclick = function(){ location.href = item[0]; };
     menu.appendChild(btn);
   });
   var closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.textContent = '✕ 닫기';
-  closeBtn.style.cssText = 'display:block;width:100%;padding:20px 0;color:#B8952A;font-size:14px;background:none;border:none;text-align:center;cursor:pointer;margin-top:24px;letter-spacing:2px;font-family:inherit;touch-action:manipulation;';
+  closeBtn.style.cssText = 'display:block;width:100%;padding:18px 0;color:#B8952A;font-size:13px;background:none;border:none;text-align:center;cursor:pointer;margin-top:20px;letter-spacing:2px;font-family:inherit;touch-action:manipulation;';
   closeBtn.onclick = function(){ menu.remove(); };
   menu.appendChild(closeBtn);
   document.body.appendChild(menu);
