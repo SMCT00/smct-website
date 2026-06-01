@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C형강 중량 계산기 | 에스엠씨티건설</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #0f1923; min-height: 100vh; color: #e8edf2; }
+
+  .header { background: linear-gradient(135deg, #1a2a1a 0%, #0d1f0d 100%); border-bottom: 2px solid #4ade80; padding: 20px 24px; display: flex; align-items: center; gap: 16px; }
+  .header-icon { width: 48px; height: 48px; background: #4ade80; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: #0f1923; flex-shrink: 0; }
+  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+  .header-sub { font-size: 12px; color: #7aab7a; margin-top: 2px; }
+  .tab-wrap { margin-left: auto; display: flex; gap: 8px; }
+  .tab-btn { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: all 0.2s; font-family: inherit; }
+  .tab-btn.active { background: #4ade80; color: #0f1923; }
+  .tab-btn.inactive { background: #1e3020; color: #7aab7a; }
+
+  .container { padding: 24px; max-width: 800px; margin: 0 auto; }
+  .section { background: #131f13; border-radius: 12px; padding: 20px; margin-bottom: 18px; border: 1px solid #1e3020; }
+  .section-title { font-size: 13px; color: #4ade80; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
+
+  /* 타입 선택 */
+  .type-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .type-btn { padding: 14px 8px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: all 0.2s; border: 2px solid; font-family: inherit; text-align: center; }
+  .type-btn.active { border-color: #4ade80; background: #0d2010; color: #4ade80; }
+  .type-btn.inactive { border-color: #1e3020; background: #0f1923; color: #7aab7a; }
+  .type-icon { font-size: 28px; display: block; margin-bottom: 6px; line-height: 1; }
+
+  /* 모드 버튼 */
+  .mode-wrap { display: flex; gap: 12px; margin-bottom: 20px; }
+  .mode-btn { flex: 1; padding: 13px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; border: 2px solid; font-family: inherit; }
+  .mode-btn.active { border-color: #4ade80; background: #0d2010; color: #4ade80; }
+  .mode-btn.inactive { border-color: #1e3020; background: #131f13; color: #7aab7a; }
+
+  label { font-size: 12px; color: #7aab7a; display: block; margin-bottom: 6px; }
+  input, select { width: 100%; padding: 11px 14px; border-radius: 8px; background: #0f1923; border: 1px solid #1e4020; color: #e8edf2; font-size: 15px; font-weight: 600; font-family: inherit; }
+  input:focus, select:focus { outline: none; border-color: #4ade80; }
+  select option { background: #131f13; }
+
+  .spec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .spec-card { background: #0f1923; border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .spec-label { font-size: 11px; color: #3a6040; }
+  .spec-value { font-size: 17px; font-weight: 800; color: #e8edf2; margin-top: 3px; }
+  .spec-unit { font-size: 10px; color: #3a6040; }
+
+  .custom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .lq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* 단면 다이어그램 영역 */
+  .diagram-area { display: flex; justify-content: center; align-items: center; margin: 18px 0 6px; }
+
+  /* 결과 */
+  .result-section { background: linear-gradient(135deg, #0d2010, #0f1923); border-radius: 14px; padding: 22px; margin-bottom: 18px; border: 2px solid #1e4020; }
+  .result-title { font-size: 13px; color: #4ade80; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
+  .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .result-card { background: #0f1923; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .result-card-label { font-size: 11px; color: #3a6040; margin-bottom: 6px; }
+  .result-formula { margin-top: 12px; padding: 10px 14px; background: #0f1923; border-radius: 8px; font-size: 12px; color: #3a6040; }
+
+  .add-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: linear-gradient(135deg, #4ade80, #22c55e); color: #0f1923; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .add-btn:hover { background: linear-gradient(135deg, #6ee7a0, #4ade80); }
+
+  /* 목록 */
+  .list-item { background: #131f13; border-radius: 10px; padding: 14px 16px; border: 1px solid #1e3020; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .list-num { width: 30px; height: 30px; background: #4ade80; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; color: #0f1923; flex-shrink: 0; }
+  .list-info { flex: 1; }
+  .list-name { font-weight: 700; font-size: 14px; color: #e8edf2; }
+  .list-detail { font-size: 12px; color: #4a6a50; margin-top: 3px; }
+  .list-weight { text-align: right; }
+  .list-kg { font-size: 16px; font-weight: 800; color: #f0c040; }
+  .list-ton { font-size: 12px; color: #4ade80; }
+  .del-btn { width: 28px; height: 28px; border: none; background: #2a1a1a; color: #aa4444; border-radius: 6px; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+
+  .total-section { background: linear-gradient(135deg, #0d2010, #0f1923); border-radius: 12px; padding: 20px; border: 2px solid #1e4020; display: flex; justify-content: space-between; align-items: center; }
+  .total-label { font-size: 14px; color: #4ade80; font-weight: 700; }
+  .total-sub { font-size: 12px; color: #3a6040; margin-top: 4px; }
+  .total-kg { font-size: 26px; font-weight: 900; color: #f0c040; }
+  .total-ton { font-size: 15px; color: #4ade80; font-weight: 700; }
+  .clear-btn { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3a2a2a; background: transparent; color: #aa4444; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 12px; font-family: inherit; }
+
+  .empty { text-align: center; padding: 60px 20px; color: #4a6a50; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .hidden { display: none; }
+  .footer { text-align: center; padding: 20px; font-size: 11px; color: #2a4030; }
+
+  /* 치수 표시 레이블 */
+  .dim-badge { display: inline-block; background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; font-size: 10px; padding: 2px 7px; border-radius: 4px; margin: 2px; }
+
+  @media (max-width: 480px) {
+    .header { padding: 14px 16px; flex-wrap: wrap; }
+    .tab-wrap { width: 100%; }
+    .tab-btn { flex: 1; text-align: center; }
+    .container { padding: 14px; }
+    .spec-grid { grid-template-columns: repeat(2, 1fr); }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+    .total-section { flex-direction: column; gap: 12px; text-align: center; }
+    .type-wrap { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">C</div>
+  <div>
+    <div class="header-title">C형강 중량 계산기</div>
+    <div class="header-sub">KS D 3530 기준 · 강재 밀도 7.85 t/m³</div>
+  </div>
+  <div class="tab-wrap">
+    <button class="tab-btn active" id="tabCalcBtn" onclick="switchTab('calc')">📐 계산</button>
+    <button class="tab-btn inactive" id="tabListBtn" onclick="switchTab('list')">📋 목록 (<span id="listCount">0</span>)</button>
+  </div>
+</div>
+
+<div class="container" id="tabCalc">
+
+  <!-- 형강 타입 -->
+  <div class="section">
+    <div class="section-title">▍ 형강 종류</div>
+    <div class="type-wrap">
+      <button class="type-btn active" id="typeC" onclick="setType('C')">
+        <span class="type-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36"><polyline points="28,4 8,4 8,32 28,32" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        C형강<br><small style="color:#7aab7a;font-weight:400">립 없는 채널</small>
+      </button>
+      <button class="type-btn inactive" id="typeLipC" onclick="setType('LipC')">
+        <span class="type-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36"><polyline points="22,4 8,4 8,32 22,32" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><line x1="22" y1="4" x2="30" y2="4" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/><line x1="22" y1="32" x2="30" y2="32" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/></svg>
+        </span>
+        립C형강<br><small style="color:#7aab7a;font-weight:400">경량 립채널</small>
+      </button>
+      <button class="type-btn inactive" id="typeL" onclick="setType('L')">
+        <span class="type-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36"><polyline points="8,4 8,32 32,32" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        L형강(등변)<br><small style="color:#7aab7a;font-weight:400">앵글 · 등변산형강</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- 모드 -->
+  <div class="mode-wrap">
+    <button class="mode-btn active" id="modeStdBtn" onclick="setMode('standard')">📏 표준 규격</button>
+    <button class="mode-btn inactive" id="modeCusBtn" onclick="setMode('custom')">✏️ 직접 입력</button>
+  </div>
+
+  <!-- 단면 규격 -->
+  <div class="section">
+    <div class="section-title" id="secTitle">▍ 단면 규격 (C형강)</div>
+
+    <div id="standardPanel">
+      <label id="sizeLabel">규격 선택 (H×B×t mm)</label>
+      <select id="sizeSelect" onchange="onSizeChange()"></select>
+      <div class="spec-grid" id="specGrid"></div>
+    </div>
+
+    <div id="customPanel" class="hidden">
+      <div class="custom-grid" id="customGrid"></div>
+    </div>
+
+    <!-- 단면 다이어그램 -->
+    <div class="diagram-area" id="diagramArea"></div>
+  </div>
+
+  <!-- 길이 / 수량 -->
+  <div class="section">
+    <div class="section-title">▍ 길이 / 수량</div>
+    <div class="lq-grid">
+      <div><label>길이 (m)</label><input type="number" id="length" value="6" step="0.1" min="0.1" oninput="calcResult()"></div>
+      <div><label>수량 (개)</label><input type="number" id="quantity" value="1" min="1" oninput="calcResult()"></div>
+    </div>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result-section">
+    <div class="result-title">▍ 계산 결과</div>
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="result-card-label">단위중량</div>
+        <div style="font-size:18px;font-weight:900;color:#7aab7a;" id="resUnit">-</div>
+        <div style="font-size:11px;color:#3a6040;">kg/m</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">총 중량</div>
+        <div style="font-size:18px;font-weight:900;color:#f0c040;" id="resKg">-</div>
+        <div style="font-size:11px;color:#3a6040;">kg</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">총 중량</div>
+        <div style="font-size:18px;font-weight:900;color:#4ade80;" id="resTon">-</div>
+        <div style="font-size:11px;color:#3a6040;">ton</div>
+      </div>
+    </div>
+    <div class="result-formula" id="resFormula">규격과 수량을 입력하면 계산됩니다</div>
+  </div>
+
+  <button class="add-btn" onclick="addItem()">+ 목록에 추가</button>
+</div>
+
+<!-- 목록 탭 -->
+<div class="container hidden" id="tabList">
+  <div id="emptyMsg" class="empty">
+    <div class="empty-icon">📋</div>
+    <div>계산 탭에서 항목을 추가하세요</div>
+  </div>
+  <div id="itemList"></div>
+  <div id="totalArea" class="hidden">
+    <div class="total-section">
+      <div>
+        <div class="total-label">전체 합계</div>
+        <div class="total-sub" id="totalItemCount">총 0개 항목</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="total-kg" id="totalKg">0 kg</div>
+        <div class="total-ton" id="totalTon">0 ton</div>
+      </div>
+    </div>
+    <button class="clear-btn" onclick="clearAll()">목록 초기화</button>
+  </div>
+</div>
+
+<div class="footer">주식회사 에스엠씨티건설 · C형강 중량 계산기 v1.0</div>
+
+<script>
+const DENSITY = 7.85;
+
+// ── 표준 규격 데이터 ──────────────────────────────────────────
+
+// C형강 (채널) H×B×t1×t2  w=kg/m  KS D 3530
+const C_STD = [
+  {size:'75×45×5×7',   H:75,  B:45,  t1:5,   t2:7,   w:5.92},
+  {size:'100×50×5×7.5',H:100, B:50,  t1:5,   t2:7.5, w:7.94},
+  {size:'120×55×5.5×8',H:120, B:55,  t1:5.5, t2:8,   w:10.4},
+  {size:'125×65×6×8',  H:125, B:65,  t1:6,   t2:8,   w:11.7},
+  {size:'150×65×6.5×9',H:150, B:65,  t1:6.5, t2:9,   w:14.2},
+  {size:'150×75×6.5×10',H:150,B:75,  t1:6.5, t2:10,  w:16.0},
+  {size:'180×75×7×10.5',H:180,B:75,  t1:7,   t2:10.5,w:19.1},
+  {size:'200×75×7×11', H:200, B:75,  t1:7,   t2:11,  w:21.7},
+  {size:'200×80×7.5×11',H:200,B:80,  t1:7.5, t2:11,  w:23.3},
+  {size:'230×75×7×11.5',H:230,B:75,  t1:7,   t2:11.5,w:24.8},
+  {size:'230×90×8×12.5',H:230,B:90,  t1:8,   t2:12.5,w:30.0},
+  {size:'250×90×9×13', H:250, B:90,  t1:9,   t2:13,  w:34.5},
+  {size:'300×90×9×13.5',H:300,B:90,  t1:9,   t2:13.5,w:41.2},
+  {size:'300×100×10×16',H:300,B:100, t1:10,  t2:16,  w:52.3},
+  {size:'380×100×10.5×17.5',H:380,B:100,t1:10.5,t2:17.5,w:68.0},
+];
+
+// 립C형강 (경량 립채널) H×B×C×t  w=kg/m  KS D 3530
+const LIPC_STD = [
+  // ── KS 규격표 기준 (H×B×C×t) ──────────────────────────────
+  {size:'60×30×10×1.6',   H:60,  B:30, C:10, t:1.6, w:1.35},
+  {size:'60×30×10×2.0',   H:60,  B:30, C:10, t:2.0, w:1.67},
+  {size:'60×30×10×2.3',   H:60,  B:30, C:10, t:2.3, w:1.90},
+  {size:'75×45×15×1.6',   H:75,  B:45, C:15, t:1.6, w:1.93},
+  {size:'75×45×15×2.0',   H:75,  B:45, C:15, t:2.0, w:2.39},
+  {size:'75×45×15×2.3',   H:75,  B:45, C:15, t:2.3, w:2.72},
+  {size:'90×45×20×2.0',   H:90,  B:45, C:20, t:2.0, w:2.61},
+  {size:'90×45×20×2.3',   H:90,  B:45, C:20, t:2.3, w:2.98},
+  {size:'90×45×20×3.2',   H:90,  B:45, C:20, t:3.2, w:4.04},
+  {size:'90×50×20×3.2',   H:90,  B:50, C:20, t:3.2, w:4.20},
+  {size:'100×50×20×1.6',  H:100, B:50, C:20, t:1.6, w:2.37},
+  {size:'100×50×20×2.0',  H:100, B:50, C:20, t:2.0, w:2.94},
+  {size:'100×50×20×2.3',  H:100, B:50, C:20, t:2.3, w:3.36},
+  {size:'100×50×20×2.6',  H:100, B:50, C:20, t:2.6, w:3.78},
+  {size:'100×50×20×3.2',  H:100, B:50, C:20, t:3.2, w:4.59},
+  {size:'125×50×20×2.0',  H:125, B:50, C:20, t:2.0, w:3.24},
+  {size:'125×50×20×2.3',  H:125, B:50, C:20, t:2.3, w:3.71},
+  {size:'125×50×20×2.6',  H:125, B:50, C:20, t:2.6, w:4.17},
+  {size:'125×50×20×3.2',  H:125, B:50, C:20, t:3.2, w:5.07},
+  {size:'150×65×20×2.0',  H:150, B:65, C:20, t:2.0, w:3.93},
+  {size:'150×65×20×2.3',  H:150, B:65, C:20, t:2.3, w:4.50},
+  {size:'150×65×20×2.6',  H:150, B:65, C:20, t:2.6, w:5.06},
+  {size:'150×65×20×3.2',  H:150, B:65, C:20, t:3.2, w:6.17},
+  {size:'150×65×20×3.5',  H:150, B:65, C:20, t:3.5, w:6.72},
+  {size:'180×75×20×2.3',  H:180, B:75, C:20, t:2.3, w:5.42},
+  {size:'180×75×20×2.6',  H:180, B:75, C:20, t:2.6, w:6.10},
+  {size:'180×75×20×3.2',  H:180, B:75, C:20, t:3.2, w:7.44},
+  {size:'200×75×20×2.3',  H:200, B:75, C:20, t:2.3, w:5.96},
+  {size:'200×75×20×2.6',  H:200, B:75, C:20, t:2.6, w:6.72},
+  {size:'200×75×20×3.2',  H:200, B:75, C:20, t:3.2, w:8.21},
+  {size:'200×75×25×3.2',  H:200, B:75, C:25, t:3.2, w:8.57},
+  {size:'230×75×25×2.6',  H:230, B:75, C:25, t:2.6, w:7.56},
+  {size:'230×75×25×3.2',  H:230, B:75, C:25, t:3.2, w:9.23},
+  {size:'250×75×25×3.0',  H:250, B:75, C:25, t:3.0, w:9.19},
+  {size:'250×75×25×3.2',  H:250, B:75, C:25, t:3.2, w:9.80},
+  {size:'300×100×30×3.2', H:300, B:100,C:30, t:3.2, w:13.2},
+  {size:'300×100×30×4.0', H:300, B:100,C:30, t:4.0, w:16.3},
+];
+
+// L형강 (등변산형강) A×A×t  w=kg/m  KS D 3507
+const L_STD = [
+  {size:'30×30×3',  A:30,  t:3,  w:1.36},
+  {size:'30×30×4',  A:30,  t:4,  w:1.77},
+  {size:'40×40×3',  A:40,  t:3,  w:1.85},
+  {size:'40×40×4',  A:40,  t:4,  w:2.42},
+  {size:'40×40×5',  A:40,  t:5,  w:2.97},
+  {size:'45×45×4',  A:45,  t:4,  w:2.74},
+  {size:'45×45×5',  A:45,  t:5,  w:3.38},
+  {size:'50×50×4',  A:50,  t:4,  w:3.06},
+  {size:'50×50×5',  A:50,  t:5,  w:3.77},
+  {size:'50×50×6',  A:50,  t:6,  w:4.47},
+  {size:'60×60×5',  A:60,  t:5,  w:4.57},
+  {size:'60×60×6',  A:60,  t:6,  w:5.42},
+  {size:'60×60×8',  A:60,  t:8,  w:7.09},
+  {size:'65×65×6',  A:65,  t:6,  w:5.91},
+  {size:'65×65×8',  A:65,  t:8,  w:7.73},
+  {size:'70×70×6',  A:70,  t:6,  w:6.38},
+  {size:'70×70×7',  A:70,  t:7,  w:7.39},
+  {size:'75×75×6',  A:75,  t:6,  w:6.85},
+  {size:'75×75×9',  A:75,  t:9,  w:10.1},
+  {size:'90×90×7',  A:90,  t:7,  w:9.72},
+  {size:'90×90×9',  A:90,  t:9,  w:12.3},
+  {size:'100×100×7',A:100, t:7,  w:10.9},
+  {size:'100×100×10',A:100,t:10, w:15.1},
+  {size:'100×100×13',A:100,t:13, w:19.4},
+  {size:'120×120×8',A:120, t:8,  w:14.7},
+  {size:'120×120×12',A:120,t:12, w:21.6},
+  {size:'130×130×9',A:130, t:9,  w:17.8},
+  {size:'150×150×12',A:150,t:12, w:27.3},
+  {size:'150×150×15',A:150,t:15, w:33.8},
+  {size:'175×175×12',A:175,t:12, w:32.1},
+  {size:'200×200×15',A:200,t:15, w:45.7},
+  {size:'200×200×20',A:200,t:20, w:59.7},
+];
+
+// ── 상태 ──────────────────────────────────────────────────────
+let currentType = 'C';
+let currentMode = 'standard';
+let items = [];
+
+function init() {
+  buildAll();
+}
+
+function getCurrentData() {
+  return currentType === 'C' ? C_STD : currentType === 'LipC' ? LIPC_STD : L_STD;
+}
+
+function getSelectedStd() {
+  const val = document.getElementById('sizeSelect').value;
+  return getCurrentData().find(s => s.size === val);
+}
+
+function buildAll() {
+  const data = getCurrentData();
+  // 제목
+  document.getElementById('secTitle').textContent =
+    currentType === 'C'    ? '▍ 단면 규격 (C형강)' :
+    currentType === 'LipC' ? '▍ 단면 규격 (립C형강)' : '▍ 단면 규격 (L형강 등변)';
+  document.getElementById('sizeLabel').textContent =
+    currentType === 'C'    ? 'H×B×t1×t2 (mm)' :
+    currentType === 'LipC' ? 'H×B×C×t (mm)' : 'A×A×t (mm)';
+
+  // 셀렉트
+  const sel = document.getElementById('sizeSelect');
+  sel.innerHTML = '';
+  data.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.size;
+    o.textContent = s.size + '  —  ' + s.w.toFixed(2) + ' kg/m';
+    sel.appendChild(o);
+  });
+  sel.value = data[Math.floor(data.length / 3)].size;
+
+  buildSpecGrid();
+  buildCustomGrid();
+  onSizeChange();
+}
+
+function buildSpecGrid() {
+  const grid = document.getElementById('specGrid');
+  if (currentType === 'C') {
+    grid.innerHTML = `
+      <div class="spec-card"><div class="spec-label">높이 H</div><div class="spec-value" id="dH">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">플랜지 B</div><div class="spec-value" id="dB">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">복부 t1</div><div class="spec-value" id="dT1">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">플랜지 t2</div><div class="spec-value" id="dT2">-</div><div class="spec-unit">mm</div></div>`;
+  } else if (currentType === 'LipC') {
+    grid.innerHTML = `
+      <div class="spec-card"><div class="spec-label">높이 H</div><div class="spec-value" id="dH">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">플랜지 B</div><div class="spec-value" id="dB">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">립 C</div><div class="spec-value" id="dC">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">두께 t</div><div class="spec-value" id="dT">-</div><div class="spec-unit">mm</div></div>`;
+  } else {
+    grid.innerHTML = `
+      <div class="spec-card"><div class="spec-label">변 길이 A</div><div class="spec-value" id="dA">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">두께 t</div><div class="spec-value" id="dT">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">단면적</div><div class="spec-value" id="dArea">-</div><div class="spec-unit">cm²</div></div>
+      <div class="spec-card"><div class="spec-label">단위중량</div><div class="spec-value" id="dW">-</div><div class="spec-unit">kg/m</div></div>`;
+  }
+}
+
+function buildCustomGrid() {
+  const grid = document.getElementById('customGrid');
+  if (currentType === 'C') {
+    grid.innerHTML = `
+      <div><label>높이 H (mm)</label><input type="number" id="cusH" value="150" oninput="calcResult()"></div>
+      <div><label>플랜지 B (mm)</label><input type="number" id="cusB" value="65" oninput="calcResult()"></div>
+      <div><label>복부 두께 t1 (mm)</label><input type="number" id="cusT1" value="6.5" step="0.1" oninput="calcResult()"></div>
+      <div><label>플랜지 두께 t2 (mm)</label><input type="number" id="cusT2" value="9" step="0.1" oninput="calcResult()"></div>`;
+  } else if (currentType === 'LipC') {
+    grid.innerHTML = `
+      <div><label>높이 H (mm)</label><input type="number" id="cusH" value="120" oninput="calcResult()"></div>
+      <div><label>플랜지 B (mm)</label><input type="number" id="cusB" value="60" oninput="calcResult()"></div>
+      <div><label>립 C (mm)</label><input type="number" id="cusC" value="15" oninput="calcResult()"></div>
+      <div><label>두께 t (mm)</label><input type="number" id="cusT" value="2.3" step="0.1" oninput="calcResult()"></div>`;
+  } else {
+    grid.innerHTML = `
+      <div><label>변 길이 A (mm)</label><input type="number" id="cusA" value="100" oninput="calcResult()"></div>
+      <div><label>두께 t (mm)</label><input type="number" id="cusT" value="10" step="0.5" oninput="calcResult()"></div>`;
+  }
+}
+
+function onSizeChange() {
+  const s = getSelectedStd();
+  if (!s) return;
+  if (currentType === 'C') {
+    set('dH', s.H); set('dB', s.B); set('dT1', s.t1); set('dT2', s.t2);
+  } else if (currentType === 'LipC') {
+    set('dH', s.H); set('dB', s.B); set('dC', s.C); set('dT', s.t);
+  } else {
+    set('dA', s.A); set('dT', s.t);
+    set('dArea', ((2 * s.A * s.t - s.t * s.t) / 100).toFixed(2));
+    set('dW', s.w.toFixed(2));
+  }
+  renderDiagram(s);
+  calcResult();
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ── 단위중량 계산 ─────────────────────────────────────────────
+function getUnitWeight() {
+  if (currentMode === 'standard') {
+    const s = getSelectedStd();
+    return s ? s.w : 0;
+  }
+  // 직접 입력
+  if (currentType === 'C') {
+    const H  = parseFloat(document.getElementById('cusH')?.value)  || 0;
+    const B  = parseFloat(document.getElementById('cusB')?.value)  || 0;
+    const t1 = parseFloat(document.getElementById('cusT1')?.value) || 0;
+    const t2 = parseFloat(document.getElementById('cusT2')?.value) || 0;
+    // 단면적(mm²) = H*t1 + 2*(B-t1)*t2  (근사식)
+    const area = H * t1 + 2 * (B - t1) * t2;
+    return parseFloat((area * 7.85 * 1e-6 * 1000).toFixed(3));
+  } else if (currentType === 'LipC') {
+    const H = parseFloat(document.getElementById('cusH')?.value) || 0;
+    const B = parseFloat(document.getElementById('cusB')?.value) || 0;
+    const C = parseFloat(document.getElementById('cusC')?.value) || 0;
+    const t = parseFloat(document.getElementById('cusT')?.value)  || 0;
+    // 전개 길이 = H + 2*B + 2*C - 4*t(코너)  ×  두께 t
+    const unfold = H + 2 * B + 2 * C - 4 * t;
+    const area = unfold * t;
+    return parseFloat((area * 7.85 * 1e-6 * 1000).toFixed(3));
+  } else {
+    const A = parseFloat(document.getElementById('cusA')?.value) || 0;
+    const t = parseFloat(document.getElementById('cusT')?.value) || 0;
+    const area = 2 * A * t - t * t;
+    return parseFloat((area * 7.85 * 1e-6 * 1000).toFixed(3));
+  }
+}
+
+function calcResult() {
+  const uw  = getUnitWeight();
+  const len = parseFloat(document.getElementById('length').value)   || 0;
+  const qty = parseInt(document.getElementById('quantity').value)   || 0;
+  const totalKg  = parseFloat((uw * len * qty).toFixed(2));
+  const totalTon = parseFloat((totalKg / 1000).toFixed(4));
+
+  set('resUnit', uw.toFixed(3) + ' kg/m');
+  set('resKg',   totalKg.toLocaleString() + ' kg');
+  set('resTon',  totalTon + ' ton');
+  document.getElementById('resFormula').innerHTML =
+    `계산식: ${uw.toFixed(3)} kg/m × ${len} m × ${qty}개 = <span style="color:#f0c040;font-weight:700">${totalKg.toLocaleString()} kg</span>`;
+}
+
+function addItem() {
+  const uw  = getUnitWeight();
+  const len = parseFloat(document.getElementById('length').value)   || 0;
+  const qty = parseInt(document.getElementById('quantity').value)   || 1;
+  if (!uw || !len || !qty) { alert('규격, 길이, 수량을 모두 입력해 주세요.'); return; }
+
+  let label = '';
+  const prefix = currentType === 'C' ? 'C형강 ' : currentType === 'LipC' ? '립C형강 ' : 'L형강 ';
+  if (currentMode === 'standard') {
+    label = prefix + getSelectedStd().size;
+  } else {
+    if (currentType === 'C') {
+      label = `${prefix}H${document.getElementById('cusH').value}×B${document.getElementById('cusB').value}(직접)`;
+    } else if (currentType === 'LipC') {
+      label = `${prefix}H${document.getElementById('cusH').value}×B${document.getElementById('cusB').value}×C${document.getElementById('cusC').value}(직접)`;
+    } else {
+      label = `${prefix}${document.getElementById('cusA').value}×${document.getElementById('cusT').value}(직접)`;
+    }
+  }
+
+  const totalKg  = parseFloat((uw * len * qty).toFixed(2));
+  const totalTon = parseFloat((totalKg / 1000).toFixed(4));
+  items.push({ id: Date.now(), label, uw, len, qty, totalKg, totalTon });
+  updateList();
+  document.getElementById('listCount').textContent = items.length;
+  switchTab('list');
+}
+
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  updateList();
+  document.getElementById('listCount').textContent = items.length;
+}
+
+function clearAll() {
+  if (!confirm('목록을 초기화하시겠습니까?')) return;
+  items = []; updateList();
+  document.getElementById('listCount').textContent = 0;
+}
+
+function updateList() {
+  const listEl  = document.getElementById('itemList');
+  const emptyEl = document.getElementById('emptyMsg');
+  const totalEl = document.getElementById('totalArea');
+  if (!items.length) { emptyEl.classList.remove('hidden'); listEl.innerHTML = ''; totalEl.classList.add('hidden'); return; }
+  emptyEl.classList.add('hidden'); totalEl.classList.remove('hidden');
+  listEl.innerHTML = items.map((item, idx) => `
+    <div class="list-item">
+      <div class="list-num">${idx + 1}</div>
+      <div class="list-info">
+        <div class="list-name">${item.label}</div>
+        <div class="list-detail">${item.uw.toFixed(3)} kg/m × ${item.len}m × ${item.qty}개</div>
+      </div>
+      <div class="list-weight">
+        <div class="list-kg">${item.totalKg.toLocaleString()} kg</div>
+        <div class="list-ton">${item.totalTon} ton</div>
+      </div>
+      <button class="del-btn" onclick="removeItem(${item.id})">×</button>
+    </div>`).join('');
+  const gKg  = items.reduce((a, b) => a + b.totalKg, 0);
+  const gTon = parseFloat((gKg / 1000).toFixed(4));
+  set('totalItemCount', `총 ${items.length}개 항목`);
+  set('totalKg',  gKg.toLocaleString(undefined, {maximumFractionDigits: 2}) + ' kg');
+  set('totalTon', gTon + ' ton');
+}
+
+function switchTab(tab) {
+  document.getElementById('tabCalc').classList.toggle('hidden', tab !== 'calc');
+  document.getElementById('tabList').classList.toggle('hidden', tab !== 'list');
+  document.getElementById('tabCalcBtn').className = 'tab-btn ' + (tab === 'calc' ? 'active' : 'inactive');
+  document.getElementById('tabListBtn').className = 'tab-btn ' + (tab === 'list' ? 'active' : 'inactive');
+}
+
+function setType(type) {
+  currentType = type;
+  ['C','LipC','L'].forEach(t => {
+    document.getElementById('type' + t).className = 'type-btn ' + (t === type ? 'active' : 'inactive');
+  });
+  buildAll();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('standardPanel').classList.toggle('hidden', mode !== 'standard');
+  document.getElementById('customPanel').classList.toggle('hidden', mode !== 'custom');
+  document.getElementById('modeStdBtn').className = 'mode-btn ' + (mode === 'standard' ? 'active' : 'inactive');
+  document.getElementById('modeCusBtn').className = 'mode-btn ' + (mode === 'custom'   ? 'active' : 'inactive');
+  calcResult();
+}
+
+// ── SVG 단면 다이어그램 ───────────────────────────────────────
+function renderDiagram(s) {
+  const area = document.getElementById('diagramArea');
+  if (!s) s = getSelectedStd();
+  if (!s) { area.innerHTML = ''; return; }
+
+  const col = '#4ade80';
+  const dim = 'rgba(74,222,128,0.4)';
+
+  if (currentType === 'C') {
+    area.innerHTML = `
+    <svg width="160" height="140" viewBox="0 0 160 140">
+      <!-- C형강 단면 -->
+      <polyline points="110,15 50,15 50,125 110,125"
+        fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 치수선 H -->
+      <line x1="30" y1="15" x2="30" y2="125" stroke="${dim}" stroke-width="1"/>
+      <text x="22" y="73" text-anchor="middle" fill="${dim}" font-size="10" font-family="sans-serif">H</text>
+      <!-- 치수선 B -->
+      <line x1="50" y1="133" x2="110" y2="133" stroke="${dim}" stroke-width="1"/>
+      <text x="80" y="142" text-anchor="middle" fill="${dim}" font-size="10" font-family="sans-serif">B</text>
+      <!-- 라벨 -->
+      <text x="80" y="73" text-anchor="middle" fill="rgba(74,222,128,0.25)" font-size="22" font-family="sans-serif" font-weight="900">C</text>
+    </svg>`;
+  } else if (currentType === 'LipC') {
+    area.innerHTML = `
+    <svg width="180" height="140" viewBox="0 0 180 140">
+      <!-- 립C형강 단면 -->
+      <polyline points="130,15 140,15 140,23 60,23 60,15 70,15 70,23"
+        fill="none" stroke="${col}" stroke-width="1" stroke-dasharray="3,3"/>
+      <polyline points="70,15 60,15 60,125 70,125 130,125 140,125 140,117"
+        fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="130" y1="15" x2="130" y2="23" stroke="${col}" stroke-width="9" stroke-linecap="round"/>
+      <line x1="130" y1="117" x2="130" y2="125" stroke="${col}" stroke-width="9" stroke-linecap="round"/>
+      <!-- 치수 라벨 -->
+      <text x="100" y="78" text-anchor="middle" fill="rgba(74,222,128,0.2)" font-size="20" font-family="sans-serif" font-weight="900">lip C</text>
+      <text x="32" y="73" text-anchor="middle" fill="${dim}" font-size="9" font-family="sans-serif">H</text>
+      <text x="100" y="138" text-anchor="middle" fill="${dim}" font-size="9" font-family="sans-serif">B</text>
+      <text x="155" y="73" text-anchor="middle" fill="${dim}" font-size="9" font-family="sans-serif">C</text>
+    </svg>`;
+  } else {
+    area.innerHTML = `
+    <svg width="130" height="130" viewBox="0 0 130 130">
+      <!-- L형강 단면 -->
+      <polyline points="20,15 20,115 120,115"
+        fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 치수 -->
+      <line x1="8" y1="15" x2="8" y2="115" stroke="${dim}" stroke-width="1"/>
+      <text x="4" y="68" text-anchor="middle" fill="${dim}" font-size="9" font-family="sans-serif">A</text>
+      <line x1="20" y1="123" x2="120" y2="123" stroke="${dim}" stroke-width="1"/>
+      <text x="70" y="129" text-anchor="middle" fill="${dim}" font-size="9" font-family="sans-serif">A</text>
+      <text x="72" y="72" text-anchor="middle" fill="rgba(74,222,128,0.2)" font-size="22" font-family="sans-serif" font-weight="900">L</text>
+    </svg>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
