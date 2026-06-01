@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>각파이프 중량 계산기 | 에스엠씨티건설</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #0f1923; min-height: 100vh; color: #e8edf2; }
+
+  /* 헤더 */
+  .header { background: linear-gradient(135deg, #1a2a3a 0%, #0d1f2d 100%); border-bottom: 2px solid #00c8ff; padding: 20px 24px; display: flex; align-items: center; gap: 16px; }
+  .header-icon { width: 48px; height: 48px; background: #00c8ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: #0f1923; flex-shrink: 0; }
+  .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+  .header-sub { font-size: 12px; color: #7a9bb5; margin-top: 2px; }
+  .tab-wrap { margin-left: auto; display: flex; gap: 8px; }
+  .tab-btn { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: all 0.2s; font-family: inherit; }
+  .tab-btn.active { background: #00c8ff; color: #0f1923; }
+  .tab-btn.inactive { background: #1e3045; color: #7a9bb5; }
+
+  .container { padding: 24px; max-width: 800px; margin: 0 auto; }
+  .section { background: #131f2b; border-radius: 12px; padding: 20px; margin-bottom: 18px; border: 1px solid #1e3045; }
+  .section-title { font-size: 13px; color: #00c8ff; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
+
+  /* 모드 버튼 */
+  .mode-wrap { display: flex; gap: 12px; margin-bottom: 20px; }
+  .mode-btn { flex: 1; padding: 13px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; border: 2px solid; font-family: inherit; }
+  .mode-btn.active { border-color: #00c8ff; background: #0d2030; color: #00c8ff; }
+  .mode-btn.inactive { border-color: #1e3045; background: #131f2b; color: #7a9bb5; }
+
+  /* 파이프 타입 선택 */
+  .type-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .type-btn { padding: 12px 8px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px; transition: all 0.2s; border: 2px solid; font-family: inherit; text-align: center; }
+  .type-btn.active { border-color: #00c8ff; background: #0d2030; color: #00c8ff; }
+  .type-btn.inactive { border-color: #1e3045; background: #0f1923; color: #7a9bb5; }
+  .type-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+  label { font-size: 12px; color: #7a9bb5; display: block; margin-bottom: 6px; }
+  input, select { width: 100%; padding: 11px 14px; border-radius: 8px; background: #0f1923; border: 1px solid #2a4060; color: #e8edf2; font-size: 15px; font-weight: 600; font-family: inherit; }
+  input:focus, select:focus { outline: none; border-color: #00c8ff; }
+  select option { background: #131f2b; }
+
+  .spec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .spec-card { background: #0f1923; border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .spec-label { font-size: 11px; color: #4a6a85; }
+  .spec-value { font-size: 18px; font-weight: 800; color: #e8edf2; margin-top: 3px; }
+  .spec-unit { font-size: 10px; color: #4a6a85; }
+
+  .custom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .lq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* 결과 */
+  .result-section { background: linear-gradient(135deg, #0d1f2d, #0d1a2d); border-radius: 14px; padding: 22px; margin-bottom: 18px; border: 2px solid #1a3a5a; }
+  .result-title { font-size: 13px; color: #00c8ff; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
+  .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .result-card { background: #0f1923; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .result-card-label { font-size: 11px; color: #2a5a7a; margin-bottom: 6px; }
+  .result-formula { margin-top: 12px; padding: 10px 14px; background: #0f1923; border-radius: 8px; font-size: 12px; color: #2a5a7a; }
+
+  .add-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: linear-gradient(135deg, #00c8ff, #0099cc); color: #0f1923; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .add-btn:hover { background: linear-gradient(135deg, #33d4ff, #00b8ee); }
+
+  /* 목록 */
+  .list-item { background: #131f2b; border-radius: 10px; padding: 14px 16px; border: 1px solid #1e3045; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .list-num { width: 30px; height: 30px; background: #00c8ff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; color: #0f1923; flex-shrink: 0; }
+  .list-info { flex: 1; }
+  .list-name { font-weight: 700; font-size: 14px; color: #e8edf2; }
+  .list-detail { font-size: 12px; color: #4a6a85; margin-top: 3px; }
+  .list-weight { text-align: right; }
+  .list-kg { font-size: 16px; font-weight: 800; color: #f0c040; }
+  .list-ton { font-size: 12px; color: #4ac87a; }
+  .del-btn { width: 28px; height: 28px; border: none; background: #2a1a1a; color: #aa4444; border-radius: 6px; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+
+  .total-section { background: linear-gradient(135deg, #0d2030, #0f1923); border-radius: 12px; padding: 20px; border: 2px solid #1a3a5a; display: flex; justify-content: space-between; align-items: center; }
+  .total-label { font-size: 14px; color: #00c8ff; font-weight: 700; }
+  .total-sub { font-size: 12px; color: #2a5a7a; margin-top: 4px; }
+  .total-kg { font-size: 26px; font-weight: 900; color: #f0c040; }
+  .total-ton { font-size: 15px; color: #4ac87a; font-weight: 700; }
+  .clear-btn { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3a2a2a; background: transparent; color: #aa4444; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 12px; font-family: inherit; }
+
+  .empty { text-align: center; padding: 60px 20px; color: #4a6a85; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .hidden { display: none; }
+  .footer { text-align: center; padding: 20px; font-size: 11px; color: #2a4060; }
+
+  /* 단면 다이어그램 */
+  .diagram-wrap { display: flex; justify-content: center; margin: 14px 0; }
+  .diagram-wrap svg { filter: drop-shadow(0 2px 8px rgba(0,200,255,0.15)); }
+
+  @media (max-width: 480px) {
+    .header { padding: 14px 16px; flex-wrap: wrap; }
+    .tab-wrap { width: 100%; }
+    .tab-btn { flex: 1; text-align: center; }
+    .container { padding: 14px; }
+    .spec-grid { grid-template-columns: repeat(2, 1fr); }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+    .total-section { flex-direction: column; gap: 12px; text-align: center; }
+    .type-wrap { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-icon">□</div>
+  <div>
+    <div class="header-title">각파이프 중량 계산기</div>
+    <div class="header-sub">KS D 3568 기준 · 강재 밀도 7.85 t/m³</div>
+  </div>
+  <div class="tab-wrap">
+    <button class="tab-btn active" id="tabCalcBtn" onclick="switchTab('calc')">📐 계산</button>
+    <button class="tab-btn inactive" id="tabListBtn" onclick="switchTab('list')">📋 목록 (<span id="listCount">0</span>)</button>
+  </div>
+</div>
+
+<!-- 계산 탭 -->
+<div class="container" id="tabCalc">
+
+  <!-- 파이프 타입 선택 -->
+  <div class="section">
+    <div class="section-title">▍ 파이프 형태</div>
+    <div class="type-wrap">
+      <button class="type-btn active" id="typeRect" onclick="setType('rect')">
+        <span class="type-icon">⬜</span>각파이프<br><small style="color:#7a9bb5;font-weight:400">정사각·직사각</small>
+      </button>
+      <button class="type-btn inactive" id="typeRound" onclick="setType('round')">
+        <span class="type-icon">⭕</span>원형파이프<br><small style="color:#7a9bb5;font-weight:400">환봉·강관</small>
+      </button>
+      <button class="type-btn inactive" id="typeFlat" onclick="setType('flat')">
+        <span class="type-icon">▬</span>플랫바<br><small style="color:#7a9bb5;font-weight:400">평철·판재</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- 모드 선택 -->
+  <div class="mode-wrap">
+    <button class="mode-btn active" id="modeStdBtn" onclick="setMode('standard')">📏 표준 규격</button>
+    <button class="mode-btn inactive" id="modeCusBtn" onclick="setMode('custom')">✏️ 직접 입력</button>
+  </div>
+
+  <!-- 단면 규격 -->
+  <div class="section">
+    <div class="section-title" id="secTitle">▍ 단면 규격 (각파이프)</div>
+
+    <!-- 표준 규격 패널 -->
+    <div id="standardPanel">
+      <label id="sizeLabel">규격 선택</label>
+      <select id="sizeSelect" onchange="onSizeChange()"></select>
+      <div class="spec-grid" id="specGrid"></div>
+    </div>
+
+    <!-- 직접 입력 패널 -->
+    <div id="customPanel" class="hidden">
+      <div class="custom-grid" id="customGrid"></div>
+    </div>
+
+    <!-- 단면 다이어그램 -->
+    <div class="diagram-wrap" id="diagramWrap"></div>
+  </div>
+
+  <!-- 길이 / 수량 -->
+  <div class="section">
+    <div class="section-title">▍ 길이 / 수량</div>
+    <div class="lq-grid">
+      <div><label>길이 (m)</label><input type="number" id="length" value="6" step="0.1" min="0.1" oninput="calcResult()"></div>
+      <div><label>수량 (개)</label><input type="number" id="quantity" value="1" min="1" oninput="calcResult()"></div>
+    </div>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result-section">
+    <div class="result-title">▍ 계산 결과</div>
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="result-card-label">단위중량</div>
+        <div style="font-size:18px;font-weight:900;color:#7a9bb5;" id="resUnit">-</div>
+        <div style="font-size:11px;color:#2a5a7a;">kg/m</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">총 중량</div>
+        <div style="font-size:18px;font-weight:900;color:#f0c040;" id="resKg">-</div>
+        <div style="font-size:11px;color:#2a5a7a;">kg</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">총 중량</div>
+        <div style="font-size:18px;font-weight:900;color:#4ac87a;" id="resTon">-</div>
+        <div style="font-size:11px;color:#2a5a7a;">ton</div>
+      </div>
+    </div>
+    <div class="result-formula" id="resFormula">규격과 수량을 입력하면 계산됩니다</div>
+  </div>
+
+  <button class="add-btn" onclick="addItem()">+ 목록에 추가</button>
+</div>
+
+<!-- 목록 탭 -->
+<div class="container hidden" id="tabList">
+  <div id="emptyMsg" class="empty">
+    <div class="empty-icon">📋</div>
+    <div>계산 탭에서 항목을 추가하세요</div>
+  </div>
+  <div id="itemList"></div>
+  <div id="totalArea" class="hidden">
+    <div class="total-section">
+      <div>
+        <div class="total-label">전체 합계</div>
+        <div class="total-sub" id="totalItemCount">총 0개 항목</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="total-kg" id="totalKg">0 kg</div>
+        <div class="total-ton" id="totalTon">0 ton</div>
+      </div>
+    </div>
+    <button class="clear-btn" onclick="clearAll()">목록 초기화</button>
+  </div>
+</div>
+
+<div class="footer">주식회사 에스엠씨티건설 · 각파이프 중량 계산기 v1.0</div>
+
+<script>
+const DENSITY = 7.85; // g/cm³ = ton/m³
+
+// ── 표준 규격 데이터 ──────────────────────────────────────────
+
+const RECT_STANDARDS = [
+  // 정사각 각파이프 (A×A×t) KS D 3568
+  {size:'20×20×1.6', a:20, b:20, t:1.6, w:0.865},
+  {size:'20×20×2.0', a:20, b:20, t:2.0, w:1.051},
+  {size:'25×25×1.6', a:25, b:25, t:1.6, w:1.117},
+  {size:'25×25×2.0', a:25, b:25, t:2.0, w:1.362},
+  {size:'30×30×1.6', a:30, b:30, t:1.6, w:1.369},
+  {size:'30×30×2.0', a:30, b:30, t:2.0, w:1.673},
+  {size:'30×30×2.3', a:30, b:30, t:2.3, w:1.886},
+  {size:'40×40×2.0', a:40, b:40, t:2.0, w:2.294},
+  {size:'40×40×2.3', a:40, b:40, t:2.3, w:2.605},
+  {size:'40×40×3.0', a:40, b:40, t:3.0, w:3.296},
+  {size:'50×50×2.0', a:50, b:50, t:2.0, w:2.915},
+  {size:'50×50×2.3', a:50, b:50, t:2.3, w:3.325},
+  {size:'50×50×3.0', a:50, b:50, t:3.0, w:4.248},
+  {size:'50×50×4.0', a:50, b:50, t:4.0, w:5.476},
+  {size:'60×60×2.3', a:60, b:60, t:2.3, w:4.044},
+  {size:'60×60×3.0', a:60, b:60, t:3.0, w:5.200},
+  {size:'60×60×4.0', a:60, b:60, t:4.0, w:6.737},
+  {size:'75×75×3.0', a:75, b:75, t:3.0, w:6.587},
+  {size:'75×75×4.0', a:75, b:75, t:4.0, w:8.621},
+  {size:'75×75×5.0', a:75, b:75, t:5.0, w:10.56},
+  {size:'100×100×3.0', a:100, b:100, t:3.0, w:8.974},
+  {size:'100×100×4.0', a:100, b:100, t:4.0, w:11.76},
+  {size:'100×100×5.0', a:100, b:100, t:5.0, w:14.44},
+  {size:'100×100×6.0', a:100, b:100, t:6.0, w:16.98},
+  {size:'125×125×4.0', a:125, b:125, t:4.0, w:14.89},
+  {size:'125×125×5.0', a:125, b:125, t:5.0, w:18.35},
+  {size:'125×125×6.0', a:125, b:125, t:6.0, w:21.67},
+  {size:'150×150×4.0', a:150, b:150, t:4.0, w:18.02},
+  {size:'150×150×5.0', a:150, b:150, t:5.0, w:22.26},
+  {size:'150×150×6.0', a:150, b:150, t:6.0, w:26.36},
+  // 직사각 각파이프
+  {size:'30×20×2.0', a:30, b:20, t:2.0, w:1.423},
+  {size:'40×20×2.0', a:40, b:20, t:2.0, w:1.734},
+  {size:'40×25×2.0', a:40, b:25, t:2.0, w:1.983},
+  {size:'50×25×2.0', a:50, b:25, t:2.0, w:2.294},
+  {size:'50×30×2.0', a:50, b:30, t:2.0, w:2.294},
+  {size:'60×30×2.3', a:60, b:30, t:2.3, w:3.155},
+  {size:'60×40×2.3', a:60, b:40, t:2.3, w:3.600},
+  {size:'80×40×3.0', a:80, b:40, t:3.0, w:5.200},
+  {size:'80×60×3.0', a:80, b:60, t:3.0, w:6.152},
+  {size:'100×50×3.0', a:100, b:50, t:3.0, w:6.587},
+  {size:'100×60×3.0', a:100, b:60, t:3.0, w:7.065},
+  {size:'100×50×4.0', a:100, b:50, t:4.0, w:8.621},
+  {size:'120×60×4.0', a:120, b:60, t:4.0, w:10.48},
+  {size:'150×100×5.0', a:150, b:100, t:5.0, w:18.35},
+];
+
+const ROUND_STANDARDS = [
+  // 원형강관 (외경×두께) KS D 3568
+  {size:'21.7×2.0', od:21.7, t:2.0, w:0.923},
+  {size:'27.2×2.0', od:27.2, t:2.0, w:1.182},
+  {size:'34.0×2.3', od:34.0, t:2.3, w:1.727},
+  {size:'42.7×2.3', od:42.7, t:2.3, w:2.202},
+  {size:'48.6×2.3', od:48.6, t:2.3, w:2.524},
+  {size:'48.6×3.0', od:48.6, t:3.0, w:3.238},
+  {size:'60.5×2.3', od:60.5, t:2.3, w:3.171},
+  {size:'60.5×3.0', od:60.5, t:3.0, w:4.086},
+  {size:'76.3×3.0', od:76.3, t:3.0, w:5.244},
+  {size:'76.3×4.0', od:76.3, t:4.0, w:6.878},
+  {size:'89.1×3.0', od:89.1, t:3.0, w:6.169},
+  {size:'89.1×4.0', od:89.1, t:4.0, w:8.122},
+  {size:'101.6×3.2', od:101.6, t:3.2, w:7.955},
+  {size:'114.3×3.5', od:114.3, t:3.5, w:9.748},
+  {size:'139.8×4.0', od:139.8, t:4.0, w:13.57},
+  {size:'165.2×4.5', od:165.2, t:4.5, w:18.10},
+  {size:'216.3×5.0', od:216.3, t:5.0, w:26.40},
+  {size:'267.4×6.0', od:267.4, t:6.0, w:39.05},
+];
+
+const FLAT_STANDARDS = [
+  // 플랫바 (폭×두께)
+  {size:'19×3', w:25, h:3, wt:0.447},
+  {size:'19×4', w:25, h:4, wt:0.596},
+  {size:'25×3', w:25, h:3, wt:0.589},
+  {size:'25×4', w:25, h:4, wt:0.785},
+  {size:'25×6', w:25, h:6, wt:1.178},
+  {size:'30×3', w:30, h:3, wt:0.707},
+  {size:'30×4', w:30, h:4, wt:0.942},
+  {size:'30×6', w:30, h:6, wt:1.413},
+  {size:'38×4', w:38, h:4, wt:1.194},
+  {size:'38×6', w:38, h:6, wt:1.791},
+  {size:'50×4', w:50, h:4, wt:1.571},
+  {size:'50×6', w:50, h:6, wt:2.356},
+  {size:'50×9', w:50, h:9, wt:3.534},
+  {size:'50×12', w:50, h:12, wt:4.712},
+  {size:'65×6', w:65, h:6, wt:3.063},
+  {size:'65×9', w:65, h:9, wt:4.594},
+  {size:'75×6', w:75, h:6, wt:3.534},
+  {size:'75×9', w:75, h:9, wt:5.301},
+  {size:'75×12', w:75, h:12, wt:7.068},
+  {size:'100×6', w:100, h:6, wt:4.712},
+  {size:'100×9', w:100, h:9, wt:7.068},
+  {size:'100×12', w:100, h:12, wt:9.424},
+  {size:'100×16', w:100, h:16, wt:12.57},
+  {size:'125×9', w:125, h:9, wt:8.835},
+  {size:'125×12', w:125, h:12, wt:11.78},
+  {size:'150×12', w:150, h:12, wt:14.13},
+  {size:'150×16', w:150, h:16, wt:18.84},
+];
+
+// ── 상태 변수 ──────────────────────────────────────────────────
+let currentType = 'rect';   // rect | round | flat
+let currentMode = 'standard';
+let items = [];
+
+// ── 초기화 ────────────────────────────────────────────────────
+function init() {
+  buildSelectAndInputs();
+  renderDiagram();
+  calcResult();
+}
+
+function buildSelectAndInputs() {
+  const sel = document.getElementById('sizeSelect');
+  sel.innerHTML = '';
+  const data = getCurrentData();
+  document.getElementById('secTitle').textContent =
+    currentType === 'rect' ? '▍ 단면 규격 (각파이프)' :
+    currentType === 'round' ? '▍ 단면 규격 (원형파이프)' : '▍ 단면 규격 (플랫바)';
+  document.getElementById('sizeLabel').textContent =
+    currentType === 'rect' ? 'A×B×t (mm)' :
+    currentType === 'round' ? '외경×두께 (mm)' : '폭×두께 (mm)';
+
+  data.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.size;
+    const wKey = currentType === 'flat' ? 'wt' : 'w';
+    o.textContent = s.size + '  —  ' + s[wKey].toFixed(3) + ' kg/m';
+    sel.appendChild(o);
+  });
+  sel.value = data[Math.floor(data.length / 3)].size;
+  buildSpecGrid();
+  buildCustomGrid();
+  onSizeChange();
+}
+
+function getCurrentData() {
+  return currentType === 'rect' ? RECT_STANDARDS :
+         currentType === 'round' ? ROUND_STANDARDS : FLAT_STANDARDS;
+}
+
+function getSelectedStd() {
+  const sel = document.getElementById('sizeSelect').value;
+  const data = getCurrentData();
+  return data.find(s => s.size === sel);
+}
+
+function buildSpecGrid() {
+  const grid = document.getElementById('specGrid');
+  if (currentType === 'rect') {
+    grid.innerHTML = `
+      <div class="spec-card"><div class="spec-label">가로 A</div><div class="spec-value" id="dispA">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">세로 B</div><div class="spec-value" id="dispB">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">두께 t</div><div class="spec-value" id="dispT">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">단위중량</div><div class="spec-value" id="dispW">-</div><div class="spec-unit">kg/m</div></div>`;
+  } else if (currentType === 'round') {
+    grid.innerHTML = `
+      <div class="spec-card"><div class="spec-label">외경 OD</div><div class="spec-value" id="dispOD">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">두께 t</div><div class="spec-value" id="dispT">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">내경 ID</div><div class="spec-value" id="dispID">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">단위중량</div><div class="spec-value" id="dispW">-</div><div class="spec-unit">kg/m</div></div>`;
+  } else {
+    grid.innerHTML = `
+      <div class="spec-card"><div class="spec-label">폭 W</div><div class="spec-value" id="dispW2">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">두께 t</div><div class="spec-value" id="dispT">-</div><div class="spec-unit">mm</div></div>
+      <div class="spec-card"><div class="spec-label">단면적</div><div class="spec-value" id="dispArea">-</div><div class="spec-unit">mm²</div></div>
+      <div class="spec-card"><div class="spec-label">단위중량</div><div class="spec-value" id="dispW">-</div><div class="spec-unit">kg/m</div></div>`;
+  }
+}
+
+function buildCustomGrid() {
+  const grid = document.getElementById('customGrid');
+  if (currentType === 'rect') {
+    grid.innerHTML = `
+      <div><label>가로 A (mm)</label><input type="number" id="cusA" value="100" oninput="calcResult()"></div>
+      <div><label>세로 B (mm)</label><input type="number" id="cusB" value="100" oninput="calcResult()"></div>
+      <div><label>두께 t (mm)</label><input type="number" id="cusT" value="3.0" step="0.1" oninput="calcResult()"></div>
+      <div><label>단위중량</label><div style="padding:11px 14px;background:#0f1923;border:1px solid #2a4060;border-radius:8px;font-size:13px;font-weight:600;color:#00c8ff" id="cusUW">-</div></div>`;
+  } else if (currentType === 'round') {
+    grid.innerHTML = `
+      <div><label>외경 OD (mm)</label><input type="number" id="cusOD" value="76.3" step="0.1" oninput="calcResult()"></div>
+      <div><label>두께 t (mm)</label><input type="number" id="cusT" value="3.0" step="0.1" oninput="calcResult()"></div>
+      <div><label>단위중량</label><div style="padding:11px 14px;background:#0f1923;border:1px solid #2a4060;border-radius:8px;font-size:13px;font-weight:600;color:#00c8ff" id="cusUW">-</div></div>
+      <div></div>`;
+  } else {
+    grid.innerHTML = `
+      <div><label>폭 W (mm)</label><input type="number" id="cusW" value="100" oninput="calcResult()"></div>
+      <div><label>두께 t (mm)</label><input type="number" id="cusT" value="6" step="0.5" oninput="calcResult()"></div>
+      <div><label>단위중량</label><div style="padding:11px 14px;background:#0f1923;border:1px solid #2a4060;border-radius:8px;font-size:13px;font-weight:600;color:#00c8ff" id="cusUW">-</div></div>
+      <div></div>`;
+  }
+}
+
+function onSizeChange() {
+  const s = getSelectedStd();
+  if (!s) return;
+  if (currentType === 'rect') {
+    setText('dispA', s.a); setText('dispB', s.b); setText('dispT', s.t);
+    setText('dispW', s.w.toFixed(3));
+  } else if (currentType === 'round') {
+    setText('dispOD', s.od); setText('dispT', s.t);
+    setText('dispID', (s.od - 2 * s.t).toFixed(1));
+    setText('dispW', s.w.toFixed(3));
+  } else {
+    setText('dispW2', s.w); setText('dispT', s.h);
+    setText('dispArea', (s.w * s.h).toFixed(0));
+    setText('dispW', s.wt.toFixed(3));
+  }
+  renderDiagram();
+  calcResult();
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ── 단면적 계산 ──────────────────────────────────────────────
+function getUnitWeight() {
+  if (currentMode === 'standard') {
+    const s = getSelectedStd();
+    if (!s) return 0;
+    return currentType === 'flat' ? s.wt : s.w;
+  }
+  // 직접 입력
+  if (currentType === 'rect') {
+    const a = parseFloat(document.getElementById('cusA')?.value) || 0;
+    const b = parseFloat(document.getElementById('cusB')?.value) || 0;
+    const t = parseFloat(document.getElementById('cusT')?.value) || 0;
+    // 단면적 (mm²) = 2*(a+b)*t - 4*t²
+    const area = 2 * (a + b) * t - 4 * t * t;
+    return parseFloat((area * DENSITY * 0.001 * 0.001 * 1000).toFixed(4)); // kg/m
+  } else if (currentType === 'round') {
+    const od = parseFloat(document.getElementById('cusOD')?.value) || 0;
+    const t  = parseFloat(document.getElementById('cusT')?.value) || 0;
+    const id = od - 2 * t;
+    const area = Math.PI / 4 * (od * od - id * id);
+    return parseFloat((area * DENSITY * 0.001 * 0.001 * 1000).toFixed(4));
+  } else {
+    const w = parseFloat(document.getElementById('cusW')?.value) || 0;
+    const t = parseFloat(document.getElementById('cusT')?.value) || 0;
+    const area = w * t;
+    return parseFloat((area * DENSITY * 0.001 * 0.001 * 1000).toFixed(4));
+  }
+}
+
+function calcResult() {
+  const uw = getUnitWeight();
+  const len = parseFloat(document.getElementById('length').value) || 0;
+  const qty = parseInt(document.getElementById('quantity').value) || 0;
+  const totalKg = parseFloat((uw * len * qty).toFixed(2));
+  const totalTon = parseFloat((totalKg / 1000).toFixed(4));
+
+  setText('resUnit', uw.toFixed(3) + ' kg/m');
+  setText('resKg', totalKg.toLocaleString() + ' kg');
+  setText('resTon', totalTon + ' ton');
+  document.getElementById('resFormula').innerHTML =
+    `계산식: ${uw.toFixed(3)} kg/m × ${len} m × ${qty}개 = <span style="color:#f0c040;font-weight:700">${totalKg.toLocaleString()} kg</span>`;
+
+  // 직접입력 단위중량 표시
+  const uwEl = document.getElementById('cusUW');
+  if (uwEl) uwEl.textContent = uw.toFixed(3) + ' kg/m';
+
+  renderDiagram();
+}
+
+function addItem() {
+  const uw = getUnitWeight();
+  const len = parseFloat(document.getElementById('length').value) || 0;
+  const qty = parseInt(document.getElementById('quantity').value) || 1;
+  if (!uw || !len || !qty) { alert('규격, 길이, 수량을 모두 입력해 주세요.'); return; }
+
+  let label = '';
+  if (currentMode === 'standard') {
+    const s = getSelectedStd();
+    label = (currentType === 'rect' ? '각파이프 ' :
+             currentType === 'round' ? '원형파이프 ' : '플랫바 ') + s.size;
+  } else {
+    if (currentType === 'rect') {
+      const a = document.getElementById('cusA').value;
+      const b = document.getElementById('cusB').value;
+      const t = document.getElementById('cusT').value;
+      label = `각파이프 ${a}×${b}×${t} (직접)`;
+    } else if (currentType === 'round') {
+      const od = document.getElementById('cusOD').value;
+      const t  = document.getElementById('cusT').value;
+      label = `원형파이프 φ${od}×${t} (직접)`;
+    } else {
+      const w = document.getElementById('cusW').value;
+      const t = document.getElementById('cusT').value;
+      label = `플랫바 ${w}×${t} (직접)`;
+    }
+  }
+
+  const totalKg = parseFloat((uw * len * qty).toFixed(2));
+  const totalTon = parseFloat((totalKg / 1000).toFixed(4));
+  items.push({ id: Date.now(), label, uw, len, qty, totalKg, totalTon });
+  updateList();
+  document.getElementById('listCount').textContent = items.length;
+  switchTab('list');
+}
+
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  updateList();
+  document.getElementById('listCount').textContent = items.length;
+}
+
+function clearAll() {
+  if (!confirm('목록을 초기화하시겠습니까?')) return;
+  items = [];
+  updateList();
+  document.getElementById('listCount').textContent = 0;
+}
+
+function updateList() {
+  const listEl = document.getElementById('itemList');
+  const emptyEl = document.getElementById('emptyMsg');
+  const totalEl = document.getElementById('totalArea');
+  if (!items.length) { emptyEl.classList.remove('hidden'); listEl.innerHTML = ''; totalEl.classList.add('hidden'); return; }
+  emptyEl.classList.add('hidden'); totalEl.classList.remove('hidden');
+  listEl.innerHTML = items.map((item, idx) => `
+    <div class="list-item">
+      <div class="list-num">${idx + 1}</div>
+      <div class="list-info">
+        <div class="list-name">${item.label}</div>
+        <div class="list-detail">${item.uw.toFixed(3)} kg/m × ${item.len}m × ${item.qty}개</div>
+      </div>
+      <div class="list-weight">
+        <div class="list-kg">${item.totalKg.toLocaleString()} kg</div>
+        <div class="list-ton">${item.totalTon} ton</div>
+      </div>
+      <button class="del-btn" onclick="removeItem(${item.id})">×</button>
+    </div>`).join('');
+  const gKg = items.reduce((a, b) => a + b.totalKg, 0);
+  const gTon = parseFloat((gKg / 1000).toFixed(4));
+  setText('totalItemCount', `총 ${items.length}개 항목`);
+  setText('totalKg', gKg.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' kg');
+  setText('totalTon', gTon + ' ton');
+}
+
+function switchTab(tab) {
+  document.getElementById('tabCalc').classList.toggle('hidden', tab !== 'calc');
+  document.getElementById('tabList').classList.toggle('hidden', tab !== 'list');
+  document.getElementById('tabCalcBtn').className = 'tab-btn ' + (tab === 'calc' ? 'active' : 'inactive');
+  document.getElementById('tabListBtn').className = 'tab-btn ' + (tab === 'list' ? 'active' : 'inactive');
+}
+
+function setType(type) {
+  currentType = type;
+  ['rect','round','flat'].forEach(t => {
+    document.getElementById('type' + t.charAt(0).toUpperCase() + t.slice(1)).className =
+      'type-btn ' + (t === type ? 'active' : 'inactive');
+  });
+  buildSelectAndInputs();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('standardPanel').classList.toggle('hidden', mode !== 'standard');
+  document.getElementById('customPanel').classList.toggle('hidden', mode !== 'custom');
+  document.getElementById('modeStdBtn').className = 'mode-btn ' + (mode === 'standard' ? 'active' : 'inactive');
+  document.getElementById('modeCusBtn').className = 'mode-btn ' + (mode === 'custom' ? 'active' : 'inactive');
+  calcResult();
+}
+
+// ── SVG 단면 다이어그램 ───────────────────────────────────────
+function renderDiagram() {
+  const wrap = document.getElementById('diagramWrap');
+  if (currentType === 'rect') {
+    wrap.innerHTML = `<svg width="120" height="100" viewBox="0 0 120 100">
+      <rect x="20" y="15" width="80" height="70" fill="none" stroke="#00c8ff" stroke-width="8" rx="2"/>
+      <line x1="60" y1="15" x2="60" y2="85" stroke="rgba(0,200,255,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="20" y1="50" x2="100" y2="50" stroke="rgba(0,200,255,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="60" y="54" text-anchor="middle" fill="rgba(0,200,255,0.5)" font-size="9" font-family="sans-serif">A×B</text>
+    </svg>`;
+  } else if (currentType === 'round') {
+    wrap.innerHTML = `<svg width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#00c8ff" stroke-width="7"/>
+      <circle cx="50" cy="50" r="24" fill="none" stroke="rgba(0,200,255,0.3)" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="50" y1="12" x2="50" y2="88" stroke="rgba(0,200,255,0.15)" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="12" y1="50" x2="88" y2="50" stroke="rgba(0,200,255,0.15)" stroke-width="1" stroke-dasharray="3,3"/>
+    </svg>`;
+  } else {
+    wrap.innerHTML = `<svg width="140" height="60" viewBox="0 0 140 60">
+      <rect x="10" y="20" width="120" height="20" fill="rgba(0,200,255,0.15)" stroke="#00c8ff" stroke-width="2" rx="1"/>
+      <line x1="70" y1="20" x2="70" y2="40" stroke="rgba(0,200,255,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="70" y="15" text-anchor="middle" fill="rgba(0,200,255,0.5)" font-size="9" font-family="sans-serif">폭 W</text>
+      <text x="130" y="33" text-anchor="start" fill="rgba(0,200,255,0.5)" font-size="9" font-family="sans-serif">t</text>
+    </svg>`;
+  }
+}
+
+// 초기화
+init();
+</script>
+</body>
+</html>
