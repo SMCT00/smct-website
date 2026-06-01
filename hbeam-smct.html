@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H빔 중량 계산기 | 에스엠씨티건설</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #0f1923; color: #e8edf2; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a2a3a 0%, #0d1f2d 100%); border-bottom: 2px solid #f0a500; padding: 18px 24px; display: flex; align-items: center; gap: 16px; }
+  .header-icon { width: 48px; height: 48px; background: #f0a500; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #0f1923; flex-shrink: 0; }
+  .header-title { font-size: 20px; font-weight: 800; color: #fff; }
+  .header-sub { font-size: 11px; color: #7a9bb5; margin-top: 2px; }
+  .tab-wrap { margin-left: auto; display: flex; gap: 8px; }
+  .tab-btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; transition: all 0.2s; }
+  .tab-btn.active { background: #f0a500; color: #0f1923; }
+  .tab-btn.inactive { background: #1e3045; color: #7a9bb5; }
+  .container { padding: 24px; max-width: 760px; margin: 0 auto; }
+  .section { background: #131f2b; border-radius: 12px; padding: 20px; margin-bottom: 18px; border: 1px solid #1e3045; }
+  .section-title { font-size: 13px; color: #f0a500; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
+  .mode-wrap { display: flex; gap: 12px; margin-bottom: 20px; }
+  .mode-btn { flex: 1; padding: 13px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; border: 2px solid; }
+  .mode-btn.active { border-color: #f0a500; background: #1a2e1a; color: #f0a500; }
+  .mode-btn.inactive { border-color: #1e3045; background: #131f2b; color: #7a9bb5; }
+  label { font-size: 12px; color: #7a9bb5; display: block; margin-bottom: 6px; }
+  input, select { width: 100%; padding: 11px 14px; border-radius: 8px; background: #0f1923; border: 1px solid #2a4060; color: #e8edf2; font-size: 15px; font-weight: 600; font-family: inherit; }
+  input:focus, select:focus { outline: none; border-color: #f0a500; }
+  select option { background: #131f2b; }
+  .spec-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 14px; }
+  .spec-card { background: #0f1923; border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .spec-label { font-size: 11px; color: #4a6a85; }
+  .spec-value { font-size: 18px; font-weight: 800; color: #e8edf2; margin-top: 3px; }
+  .spec-unit { font-size: 10px; color: #4a6a85; }
+  .custom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .lq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .result-section { background: linear-gradient(135deg, #1a2e1a, #1a2a1a); border-radius: 14px; padding: 22px; margin-bottom: 18px; border: 2px solid #2a5a2a; }
+  .result-title { font-size: 13px; color: #5aaa5a; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
+  .result-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .result-card { background: #0f1923; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .result-card-label { font-size: 11px; color: #4a6a55; margin-bottom: 6px; }
+  .result-formula { margin-top: 12px; padding: 10px 14px; background: #0f1923; border-radius: 8px; font-size: 12px; color: #4a6a55; }
+  .add-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: linear-gradient(135deg, #f0a500, #e09000); color: #0f1923; font-weight: 800; font-size: 15px; cursor: pointer; letter-spacing: 0.5px; font-family: inherit; }
+  .add-btn:hover { background: linear-gradient(135deg, #ffb520, #f0a500); }
+  .list-item { background: #131f2b; border-radius: 10px; padding: 14px 16px; border: 1px solid #1e3045; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .list-num { width: 30px; height: 30px; background: #f0a500; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; color: #0f1923; flex-shrink: 0; }
+  .list-info { flex: 1; }
+  .list-name { font-weight: 700; font-size: 14px; color: #e8edf2; }
+  .list-detail { font-size: 12px; color: #4a6a85; margin-top: 3px; }
+  .list-weight { text-align: right; }
+  .list-kg { font-size: 16px; font-weight: 800; color: #f0c040; }
+  .list-ton { font-size: 12px; color: #5aaa5a; }
+  .del-btn { width: 28px; height: 28px; border: none; background: #2a1a1a; color: #aa4444; border-radius: 6px; cursor: pointer; font-size: 16px; flex-shrink: 0; }
+  .total-section { background: linear-gradient(135deg, #1a2e1a, #0f1923); border-radius: 12px; padding: 20px; border: 2px solid #2a5a2a; display: flex; justify-content: space-between; align-items: center; }
+  .total-label { font-size: 14px; color: #5aaa5a; font-weight: 700; }
+  .total-sub { font-size: 12px; color: #4a6a55; margin-top: 4px; }
+  .total-kg { font-size: 26px; font-weight: 900; color: #f0c040; }
+  .total-ton { font-size: 15px; color: #5aaa5a; font-weight: 700; }
+  .clear-btn { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3a2a2a; background: transparent; color: #aa4444; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 12px; font-family: inherit; }
+  .empty { text-align: center; padding: 60px 20px; color: #4a6a85; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .hidden { display: none; }
+  .footer { text-align: center; padding: 20px; font-size: 11px; color: #2a4060; }
+  @media (max-width: 480px) {
+    .header { padding: 14px 16px; flex-wrap: wrap; }
+    .tab-wrap { width: 100%; }
+    .tab-btn { flex: 1; text-align: center; }
+    .container { padding: 14px; }
+    .spec-grid { grid-template-columns: repeat(2,1fr); }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+    .total-section { flex-direction: column; gap: 12px; text-align: center; }
+    .header-title { font-size: 16px; }
+    .mode-btn { font-size: 13px; padding: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">H</div>
+  <div>
+    <div class="header-title">H빔 중량 계산기</div>
+    <div class="header-sub">KS F 4603 기준 · 강재 밀도 7.85 t/m³</div>
+  </div>
+  <div class="tab-wrap">
+    <button class="tab-btn active" id="tabCalcBtn" onclick="switchTab('calc')">📐 계산</button>
+    <button class="tab-btn inactive" id="tabListBtn" onclick="switchTab('list')">📋 목록 (<span id="listCount">0</span>)</button>
+  </div>
+</div>
+
+<div class="container" id="tabCalc">
+  <div class="mode-wrap">
+    <button class="mode-btn active" id="modeStdBtn" onclick="setMode('standard')">📏 표준 규격</button>
+    <button class="mode-btn inactive" id="modeCusBtn" onclick="setMode('custom')">✏️ 직접 입력</button>
+  </div>
+  <div class="section">
+    <div class="section-title">▍ 단면 규격</div>
+    <div id="standardPanel">
+      <label>H빔 호칭 (H×B mm)</label>
+      <select id="sizeSelect" onchange="onSizeChange()"></select>
+      <div class="spec-grid">
+        <div class="spec-card"><div class="spec-label">높이 H</div><div class="spec-value" id="dispH">-</div><div class="spec-unit">mm</div></div>
+        <div class="spec-card"><div class="spec-label">폭 B</div><div class="spec-value" id="dispB">-</div><div class="spec-unit">mm</div></div>
+        <div class="spec-card"><div class="spec-label">복부 tw</div><div class="spec-value" id="dispTw">-</div><div class="spec-unit">mm</div></div>
+        <div class="spec-card"><div class="spec-label">플랜지 tf</div><div class="spec-value" id="dispTf">-</div><div class="spec-unit">mm</div></div>
+      </div>
+    </div>
+    <div id="customPanel" class="hidden">
+      <div class="custom-grid">
+        <div><label>높이 H (mm)</label><input type="number" id="cusH" value="200" oninput="calcResult()"></div>
+        <div><label>폭 B (mm)</label><input type="number" id="cusB" value="200" oninput="calcResult()"></div>
+        <div><label>복부두께 tw (mm)</label><input type="number" id="cusTw" value="8" oninput="calcResult()"></div>
+        <div><label>플랜지두께 tf (mm)</label><input type="number" id="cusTf" value="12" oninput="calcResult()"></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">▍ 길이 / 수량</div>
+    <div class="lq-grid">
+      <div><label>길이 (m)</label><input type="number" id="length" value="6" step="0.1" min="0.1" oninput="calcResult()"></div>
+      <div><label>수량 (개)</label><input type="number" id="quantity" value="1" min="1" oninput="calcResult()"></div>
+    </div>
+  </div>
+  <div class="result-section">
+    <div class="result-title">▍ 계산 결과</div>
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="result-card-label">단위중량</div>
+        <div style="font-size:18px;font-weight:900;color:#7a9bb5;" id="resUnit">-</div>
+        <div style="font-size:11px;color:#4a6a55;">kg/m</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">총 중량</div>
+        <div style="font-size:18px;font-weight:900;color:#f0c040;" id="resKg">-</div>
+        <div style="font-size:11px;color:#4a6a55;">kg</div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">총 중량</div>
+        <div style="font-size:18px;font-weight:900;color:#5aaa5a;" id="resTon">-</div>
+        <div style="font-size:11px;color:#4a6a55;">ton</div>
+      </div>
+    </div>
+    <div class="result-formula" id="resFormula">규격과 수량을 입력하면 계산됩니다</div>
+  </div>
+  <button class="add-btn" onclick="addItem()">+ 목록에 추가</button>
+</div>
+
+<div class="container hidden" id="tabList">
+  <div id="emptyMsg" class="empty">
+    <div class="empty-icon">📋</div>
+    <div>계산 탭에서 항목을 추가하세요</div>
+  </div>
+  <div id="itemList"></div>
+  <div id="totalArea" class="hidden">
+    <div class="total-section">
+      <div>
+        <div class="total-label">전체 합계</div>
+        <div class="total-sub" id="totalItemCount">총 0개 항목</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="total-kg" id="totalKg">0 kg</div>
+        <div class="total-ton" id="totalTon">0 ton</div>
+      </div>
+    </div>
+    <button class="clear-btn" onclick="clearAll()">목록 초기화</button>
+  </div>
+</div>
+
+<div class="footer">주식회사 에스엠씨티건설 · H빔 중량 계산기 v1.0</div>
+
+<script>
+const STANDARDS=[
+  {size:"100×100",h:100,b:100,tw:6,tf:8,w:17.2},
+  {size:"125×125",h:125,b:125,tw:6.5,tf:9,w:23.8},
+  {size:"150×75",h:150,b:75,tw:5,tf:7,w:14.0},
+  {size:"150×150",h:150,b:150,tw:7,tf:10,w:31.5},
+  {size:"175×90",h:175,b:90,tw:5,tf:8,w:18.1},
+  {size:"175×175",h:175,b:175,tw:7.5,tf:11,w:40.3},
+  {size:"200×100",h:200,b:100,tw:5.5,tf:8,w:21.3},
+  {size:"200×200",h:200,b:200,tw:8,tf:12,w:49.9},
+  {size:"244×175",h:244,b:175,tw:7,tf:11,w:44.1},
+  {size:"250×125",h:250,b:125,tw:6,tf:9,w:29.7},
+  {size:"250×250",h:250,b:250,tw:9,tf:14,w:72.4},
+  {size:"294×200",h:294,b:200,tw:8,tf:12,w:56.8},
+  {size:"300×150",h:300,b:150,tw:6.5,tf:9,w:36.7},
+  {size:"300×300",h:300,b:300,tw:10,tf:15,w:94.0},
+  {size:"340×250",h:340,b:250,tw:9,tf:14,w:79.7},
+  {size:"350×175",h:350,b:175,tw:7,tf:11,w:49.6},
+  {size:"350×350",h:350,b:350,tw:12,tf:19,w:137.0},
+  {size:"394×398",h:394,b:398,tw:11,tf:18,w:147.0},
+  {size:"400×200",h:400,b:200,tw:8,tf:13,w:66.0},
+  {size:"400×400",h:400,b:400,tw:13,tf:21,w:172.0},
+  {size:"446×199",h:446,b:199,tw:8,tf:12,w:65.1},
+  {size:"450×200",h:450,b:200,tw:9,tf:14,w:76.0},
+  {size:"500×200",h:500,b:200,tw:10,tf:16,w:89.7},
+  {size:"588×300",h:588,b:300,tw:12,tf:20,w:151.0},
+  {size:"600×200",h:600,b:200,tw:11,tf:17,w:106.0},
+  {size:"700×300",h:700,b:300,tw:13,tf:24,w:185.0},
+  {size:"800×300",h:800,b:300,tw:14,tf:26,w:210.0},
+  {size:"900×300",h:900,b:300,tw:16,tf:28,w:243.0},
+  {size:"1000×300",h:1000,b:300,tw:19,tf:36,w:314.0}
+];
+let currentMode='standard',items=[];
+(function(){
+  const sel=document.getElementById('sizeSelect');
+  STANDARDS.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.size;
+    o.textContent='H-'+s.size+'  —  '+s.w+' kg/m';
+    sel.appendChild(o);
+  });
+  sel.value="200×200";
+  onSizeChange();
+})();
+function onSizeChange(){
+  const s=STANDARDS.find(x=>x.size===document.getElementById('sizeSelect').value);
+  if(!s)return;
+  document.getElementById('dispH').textContent=s.h;
+  document.getElementById('dispB').textContent=s.b;
+  document.getElementById('dispTw').textContent=s.tw;
+  document.getElementById('dispTf').textContent=s.tf;
+  calcResult();
+}
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('standardPanel').classList.toggle('hidden',mode!=='standard');
+  document.getElementById('customPanel').classList.toggle('hidden',mode!=='custom');
+  document.getElementById('modeStdBtn').className='mode-btn '+(mode==='standard'?'active':'inactive');
+  document.getElementById('modeCusBtn').className='mode-btn '+(mode==='custom'?'active':'inactive');
+  calcResult();
+}
+function getUnitWeight(){
+  if(currentMode==='standard'){
+    const s=STANDARDS.find(x=>x.size===document.getElementById('sizeSelect').value);
+    return s?s.w:0;
+  }else{
+    const h=parseFloat(document.getElementById('cusH').value)||0;
+    const b=parseFloat(document.getElementById('cusB').value)||0;
+    const tw=parseFloat(document.getElementById('cusTw').value)||0;
+    const tf=parseFloat(document.getElementById('cusTf').value)||0;
+    const area=(2*b*tf+(h-2*tf)*tw)/100;
+    return parseFloat((area*7.85*0.1).toFixed(2));
+  }
+}
+function calcResult(){
+  const uw=getUnitWeight();
+  const len=parseFloat(document.getElementById('length').value)||0;
+  const qty=parseInt(document.getElementById('quantity').value)||0;
+  const totalKg=parseFloat((uw*len*qty).toFixed(1));
+  const totalTon=parseFloat((totalKg/1000).toFixed(3));
+  document.getElementById('resUnit').textContent=uw.toFixed(1)+' kg/m';
+  document.getElementById('resKg').textContent=totalKg.toLocaleString()+' kg';
+  document.getElementById('resTon').textContent=totalTon+' ton';
+  document.getElementById('resFormula').innerHTML='계산식: '+uw.toFixed(1)+' kg/m × '+len+' m × '+qty+'개 = <span style="color:#f0c040;font-weight:700;">'+totalKg.toLocaleString()+' kg</span>';
+}
+function addItem(){
+  const uw=getUnitWeight();
+  const len=parseFloat(document.getElementById('length').value)||0;
+  const qty=parseInt(document.getElementById('quantity').value)||1;
+  if(!uw||!len||!qty){alert('규격, 길이, 수량을 모두 입력해 주세요.');return;}
+  const label=currentMode==='standard'?'H-'+document.getElementById('sizeSelect').value:'H-'+document.getElementById('cusH').value+'×'+document.getElementById('cusB').value+' (직접입력)';
+  const totalKg=parseFloat((uw*len*qty).toFixed(1));
+  const totalTon=parseFloat((totalKg/1000).toFixed(3));
+  items.push({id:Date.now(),label,uw,len,qty,totalKg,totalTon});
+  updateList();
+  document.getElementById('listCount').textContent=items.length;
+  switchTab('list');
+}
+function removeItem(id){
+  items=items.filter(i=>i.id!==id);
+  updateList();
+  document.getElementById('listCount').textContent=items.length;
+}
+function clearAll(){
+  if(!confirm('목록을 초기화하시겠습니까?'))return;
+  items=[];updateList();
+  document.getElementById('listCount').textContent=0;
+}
+function updateList(){
+  const listEl=document.getElementById('itemList');
+  const emptyEl=document.getElementById('emptyMsg');
+  const totalEl=document.getElementById('totalArea');
+  if(items.length===0){emptyEl.classList.remove('hidden');listEl.innerHTML='';totalEl.classList.add('hidden');return;}
+  emptyEl.classList.add('hidden');totalEl.classList.remove('hidden');
+  listEl.innerHTML=items.map((item,idx)=>`
+    <div class="list-item">
+      <div class="list-num">${idx+1}</div>
+      <div class="list-info">
+        <div class="list-name">${item.label}</div>
+        <div class="list-detail">${item.uw.toFixed(1)} kg/m × ${item.len}m × ${item.qty}개</div>
+      </div>
+      <div class="list-weight">
+        <div class="list-kg">${item.totalKg.toLocaleString()} kg</div>
+        <div class="list-ton">${item.totalTon} ton</div>
+      </div>
+      <button class="del-btn" onclick="removeItem(${item.id})">×</button>
+    </div>`).join('');
+  const gKg=items.reduce((a,b)=>a+b.totalKg,0);
+  const gTon=parseFloat((gKg/1000).toFixed(3));
+  document.getElementById('totalItemCount').textContent='총 '+items.length+'개 항목';
+  document.getElementById('totalKg').textContent=gKg.toLocaleString(undefined,{maximumFractionDigits:1})+' kg';
+  document.getElementById('totalTon').textContent=gTon+' ton';
+}
+function switchTab(tab){
+  document.getElementById('tabCalc').classList.toggle('hidden',tab!=='calc');
+  document.getElementById('tabList').classList.toggle('hidden',tab!=='list');
+  document.getElementById('tabCalcBtn').className='tab-btn '+(tab==='calc'?'active':'inactive');
+  document.getElementById('tabListBtn').className='tab-btn '+(tab==='list'?'active':'inactive');
+}
+calcResult();
+</script>
+</body>
+</html>
