@@ -202,6 +202,24 @@
     .detail-box { width: 95vw !important; }
   }
 
+
+/* ── 팝업 포스터 ── */
+.popup-overlay{display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);justify-content:center;align-items:flex-start;padding:30px 16px;overflow-y:auto}
+.popup-overlay.on{display:flex !important;flex-wrap:wrap;gap:16px;justify-content:center;align-items:center}
+.popup-card{position:relative;max-width:380px;width:100%;cursor:pointer;transition:transform .3s}
+.popup-card:hover{transform:scale(1.02)}
+.popup-card img{width:100%;border:1px solid rgba(184,149,42,.3);display:block}
+.popup-close{position:fixed;top:16px;right:20px;background:rgba(184,149,42,.2);border:1px solid rgba(184,149,42,.4);color:#B8952A;width:46px;height:46px;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;z-index:100000;touch-action:manipulation}
+.popup-24h{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;color:rgba(255,255,255,.6);font-size:12px;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.1);touch-action:manipulation;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100000;white-space:nowrap}
+.popup-24h:hover{color:#fff;border-color:rgba(184,149,42,.4)}
+.popup-viewer{display:none;position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.97);justify-content:center;align-items:center}
+.popup-viewer.on{display:flex !important}
+.popup-viewer img{max-width:96vw;max-height:94vh;object-fit:contain}
+.popup-viewer-close{position:absolute;top:16px;right:20px;background:rgba(184,149,42,.2);border:1px solid rgba(184,149,42,.4);color:#B8952A;width:46px;height:46px;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;touch-action:manipulation}
+@media(max-width:900px){
+  .popup-card{max-width:85vw}
+}
+
 </style>
 <script>
 if('serviceWorker' in navigator){
@@ -216,6 +234,19 @@ if('serviceWorker' in navigator){
 <meta http-equiv="expires" content="0">
 </head>
 <body>
+
+<!-- 팝업 포스터 -->
+<div class="popup-overlay" id="popupOverlay">
+  <button class="popup-close" id="popupClose" onclick="closePopup()">×</button>
+  <div class="popup-card" onclick="viewPoster('poster1.jpg')"><img src="poster1.jpg" alt="SMCT 포스터 1"></div>
+  <div class="popup-card" onclick="viewPoster('poster2.jpg')"><img src="poster2.jpg" alt="SMCT 포스터 2"></div>
+  <button class="popup-24h" onclick="closePopup24h()">✕ 24시간 동안 다시 열람하지 않습니다.</button>
+</div>
+<div class="popup-viewer" id="popupViewer" onclick="closeViewer()">
+  <button class="popup-viewer-close" onclick="closeViewer()">×</button>
+  <img id="popupViewerImg" src="" alt="">
+</div>
+
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
 <nav id="navbar">
@@ -688,6 +719,29 @@ function toggleMenu(){
   menu.appendChild(closeBtn);
   document.body.appendChild(menu);
 }
+
+
+// ── 팝업 포스터 ──
+function showPopup(){
+  var last = localStorage.getItem('smct_popup_closed');
+  if(last && Date.now() - parseInt(last) < 24*60*60*1000) return;
+  document.getElementById('popupOverlay').classList.add('on');
+}
+function closePopup(){
+  document.getElementById('popupOverlay').classList.remove('on');
+}
+function closePopup24h(){
+  localStorage.setItem('smct_popup_closed', Date.now().toString());
+  closePopup();
+}
+function viewPoster(src){
+  document.getElementById('popupViewerImg').src = src;
+  document.getElementById('popupViewer').classList.add('on');
+}
+function closeViewer(){
+  document.getElementById('popupViewer').classList.remove('on');
+}
+setTimeout(showPopup, 1000);
 
 </script>
 </body>
