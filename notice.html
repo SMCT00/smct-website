@@ -283,7 +283,7 @@ if('serviceWorker' in navigator){
       <div class="img-thumbs" id="imgThumbs"></div>
       <input type="file" id="imgInput" accept="image/*" multiple style="display:none"
         onchange="addImages(this.files)">
-      <button type="button" onclick="document.getElementById('imgInput').click()"
+      <button type="button" onclick="openImgChooser()"
         style="background:transparent;border:1px dashed rgba(184,149,42,.3);
         color:rgba(184,149,42,.6);padding:8px 16px;font-size:11px;cursor:pointer;
         font-family:'Noto Sans KR',sans-serif;margin-top:8px">📎 사진 첨부</button>
@@ -615,6 +615,16 @@ ghLoadJSON('data/notices.json').then(function(data){ posts=data||[]; initAdmin()
 
 
 
+
+
+function openImgChooser(){
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.multiple = true;
+  inp.onchange = function(){ addImages(this.files); };
+  inp.click();
+}
 
 function toggleMenu(){
   var existing = document.getElementById('mobileMenu');

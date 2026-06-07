@@ -77,7 +77,7 @@ if('serviceWorker' in navigator){
 <div class="detail-view" id="detailView">
 <button class="back-btn" onclick="goBack()">← 목록으로 돌아가기</button>
 <div style="margin-bottom:28px"><div class="detail-name" id="dName"></div><div style="display:flex;gap:10px;flex-wrap:wrap"><span class="detail-tag" id="dTag"></span><span class="detail-date" id="dDate"></span></div><div class="detail-desc" id="dDesc"></div></div>
-<div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"><p>📎 서류 추가 — 클릭 또는 드래그 (GitHub 자동 저장, 모든 기기에서 보임)</p><button style="background:#B8952A;color:#000;border:none;padding:9px 22px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px" type="button">파일 선택</button><input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="addFiles(this.files)"><div class="upload-status" id="uploadStatus"></div></div>
+<div class="upload-zone" id="uploadZone" onclick="openFileChooser()"><p>📎 서류 추가 — 클릭 또는 드래그 (GitHub 자동 저장, 모든 기기에서 보임)</p><button style="background:#B8952A;color:#000;border:none;padding:9px 22px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px" type="button" onclick="openFileChooser()">파일 선택</button><div class="upload-status" id="uploadStatus"></div></div>
 <div class="photo-grid" id="photoGrid"><div class="photo-empty"><p style="font-size:13px">등록된 서류가 없습니다</p></div></div></div>
 </section>
 <div class="modal-bg" id="loginModal" onclick="if(event.target===this)closeLogin()"><div class="modal-box sm"><div style="font-size:40px;margin-bottom:14px">🔐</div><div class="m-title" style="font-size:18px">관리자 로그인</div><input type="password" class="pw-input" id="pwInput" placeholder="●●●●●●●●" onkeydown="if(event.key==='Enter')doLogin()"><button class="pw-btn" onclick="doLogin()">🔓 로그인</button><div class="pw-err" id="pwErr">비밀번호가 틀렸습니다.</div><button class="m-cancel" onclick="closeLogin()" style="width:100%;margin-top:8px">취소</button></div></div>
@@ -170,6 +170,16 @@ ghLoadJSON(DATA_PATH).then(function(data){items=data||[];initAdmin();renderCards
 
 
 
+
+
+function openFileChooser(){
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.multiple = true;
+  inp.onchange = function(){ addFiles(this.files); };
+  inp.click();
+}
 
 function toggleMenu(){
   var existing = document.getElementById('mobileMenu');
