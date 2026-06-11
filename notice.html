@@ -132,7 +132,17 @@
   background:rgba(180,50,50,.9);color:#fff;border:none;border-radius:50%;
   font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
-@media(max-width:768px){
+.file-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
+  background:rgba(100,149,237,.1);border:1px solid rgba(100,149,237,.3);
+  color:rgba(200,220,255,.85);font-size:11px;cursor:pointer;transition:all .2s;
+  font-family:'Noto Sans KR',sans-serif;max-width:200px;overflow:hidden}
+.file-chip:hover{background:rgba(100,149,237,.25);border-color:rgba(100,149,237,.6)}
+.file-chip .chip-icon{font-size:16px;flex-shrink:0}
+.file-chip .chip-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-chip-del{margin-left:4px;background:rgba(180,50,50,.7);color:#fff;border:none;
+  border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
   .page-hero{padding:0 20px 40px;height:28vh}
   section{padding:50px 16px}
   .modal-box{padding:22px 16px}
@@ -221,7 +231,7 @@ if('serviceWorker' in navigator){
     <div class="d-meta" id="dMeta"></div>
     <div class="d-content" id="dContent"></div>
     <div class="d-images" id="dImages"></div>
-  </div>
+    <div id="dFiles" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px"></div>
 </section>
 <div class="viewer-bg" id="viewerModal" onclick="if(event.target===this)closeViewer()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.96);align-items:center;justify-content:center;flex-direction:column">
   <button onclick="closeViewer()" style="position:absolute;top:16px;right:20px;background:rgba(184,149,42,.2);border:1px solid rgba(184,149,42,.4);color:#B8952A;width:46px;height:46px;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%">×</button>
@@ -279,14 +289,21 @@ if('serviceWorker' in navigator){
       <textarea id="wContent" placeholder="공지 내용을 입력하세요"></textarea>
     </div>
     <div class="f-group">
-      <label>이미지 첨부</label>
+      <label>파일 첨부 (이미지·PDF·문서 등)</label>
       <div class="img-thumbs" id="imgThumbs"></div>
-      <input type="file" id="imgInput" accept="image/*" multiple style="display:none"
-        onchange="addImages(this.files)">
-      <button type="button" onclick="openImgChooser()"
-        style="background:transparent;border:1px dashed rgba(184,149,42,.3);
-        color:rgba(184,149,42,.6);padding:8px 16px;font-size:11px;cursor:pointer;
-        font-family:'Noto Sans KR',sans-serif;margin-top:8px">📎 사진 첨부</button>
+      <input type="file" id="imgInput" accept="image/*" multiple style="display:none" onchange="addImages(this.files)">
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx,.zip,.txt" multiple style="display:none" onchange="addFiles(this.files)">
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button type="button" onclick="openImgChooser()"
+          style="background:transparent;border:1px dashed rgba(184,149,42,.3);
+          color:rgba(184,149,42,.6);padding:8px 16px;font-size:11px;cursor:pointer;
+          font-family:'Noto Sans KR',sans-serif">🖼 사진 첨부</button>
+        <button type="button" onclick="openFileChooser()"
+          style="background:transparent;border:1px dashed rgba(100,149,237,.4);
+          color:rgba(100,149,237,.8);padding:8px 16px;font-size:11px;cursor:pointer;
+          font-family:'Noto Sans KR',sans-serif">📎 파일 첨부 (PDF·문서·엑셀 등)</button>
+      </div>
+      <div id="filePreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
     </div>
     <div class="m-btns">
       <button class="m-cancel" id="wmCancel">취소</button>
@@ -341,6 +358,7 @@ var posts=[];
 var curFilter='전체';
 var editId=null;
 var pendingImgs=[];
+var pendingFiles=[];
 var viewId=null;
 
 function initAdmin(){
@@ -409,6 +427,8 @@ function renderList(){
       +'<span class="ni-cat">'+p.cat+'</span>'
       +(p.pin==='1'?'<span class="ni-pin">📌</span>':'')
       +'<span class="ni-title">'+p.title+'</span>'
+      +((p.files&&p.files.length)?'<span style="font-size:11px;color:rgba(100,149,237,.7);flex-shrink:0">📎'+p.files.length+'</span>':'')
+      +((p.images&&p.images.length)?'<span style="font-size:11px;color:rgba(184,149,42,.5);flex-shrink:0">🖼'+p.images.length+'</span>':'')
       +'<span class="ni-date">'+p.date+'</span>'
       +'<div class="ni-actions'+(isAdmin?' on':'')+'">'
       +'<button class="ni-edit" onclick="event.stopPropagation();openEdit(&quot;'+p.id+'&quot;)" title="수정">✏</button>'
@@ -432,6 +452,17 @@ function openDetail(id){
     }).join('');
   }
   document.getElementById('dImages').innerHTML=imgHtml;
+  var fileHtml='';
+  if(p.files&&p.files.length){
+    fileHtml=p.files.map(function(f){
+      var ftype=f.type&&f.type.startsWith('image/')?'img':(f.name&&f.name.toLowerCase().endsWith('.pdf')?'pdf':'other');
+      return '<div class="file-chip" onclick="openDetailFile(\''+f.data+'\',\''+f.name+'\',\''+ftype+'\')">'
+        +'<span class="chip-icon">'+getFileIcon(f.name)+'</span>'
+        +'<span class="chip-name">'+f.name+'</span>'
+        +'</div>';
+    }).join('');
+  }
+  document.getElementById('dFiles').innerHTML=fileHtml;
   document.getElementById('mainView').style.display='none';
   document.getElementById('detailView').classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -475,6 +506,7 @@ function openEdit(id){
   if(!p)return;
   editId=id;
   pendingImgs=p.images?p.images.slice():[];
+  pendingFiles=p.files?p.files.slice():[];
   document.getElementById('wmTitle').textContent='✏ 글 수정';
   document.getElementById('wCat').value=p.cat;
   document.getElementById('wPin').value=p.pin;
@@ -482,13 +514,15 @@ function openEdit(id){
   document.getElementById('wAuthor').value=p.author;
   document.getElementById('wContent').value=p.content;
   renderImgThumbs();
+  renderFilePreviews();
   document.getElementById('writeModal').classList.add('on');
   setTimeout(function(){document.getElementById('wTitle').focus();},100);
 }
 
 function closeWrite(){
   document.getElementById('writeModal').classList.remove('on');
-  editId=null;pendingImgs=[];
+  editId=null;pendingImgs=[];pendingFiles=[];
+  renderFilePreviews();
 }
 
 function savePost(){
@@ -506,6 +540,7 @@ function savePost(){
       p.author=document.getElementById('wAuthor').value.trim()||'관리자';
       p.content=content;
       p.images=pendingImgs.slice();
+      p.files=pendingFiles.slice();
     }
   }else{
     var now=new Date();
@@ -520,7 +555,8 @@ function savePost(){
       author:document.getElementById('wAuthor').value.trim()||'관리자',
       content:content,
       date:dateStr,
-      images:pendingImgs.slice()
+      images:pendingImgs.slice(),
+      files:pendingFiles.slice()
     });
   }
   closeWrite();
@@ -617,7 +653,73 @@ ghLoadJSON('data/notices.json').then(function(data){ posts=data||[]; initAdmin()
 
 
 
-function openImgChooser(){
+function openFileChooser(){
+  document.getElementById('fileInput').click();
+}
+
+function getFileIcon(name){
+  var ext=(name.split('.').pop()||'').toLowerCase();
+  if(['pdf'].includes(ext)) return '📄';
+  if(['doc','docx'].includes(ext)) return '📝';
+  if(['xls','xlsx'].includes(ext)) return '📊';
+  if(['ppt','pptx'].includes(ext)) return '📑';
+  if(['hwp'].includes(ext)) return '📋';
+  if(['zip','rar'].includes(ext)) return '🗜️';
+  if(['txt'].includes(ext)) return '📃';
+  return '📎';
+}
+
+function addFiles(files){
+  Array.from(files).forEach(function(f){
+    var r=new FileReader();
+    r.onload=function(ev){
+      pendingFiles.push({name:f.name,data:ev.target.result,type:f.type});
+      renderFilePreviews();
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+function renderFilePreviews(){
+  var box=document.getElementById('filePreviews');
+  if(!box)return;
+  box.innerHTML=pendingFiles.map(function(f,i){
+    return '<div class="file-chip" onclick="openFileData(\''+i+'\')">'
+      +'<span class="chip-icon">'+getFileIcon(f.name)+'</span>'
+      +'<span class="chip-name">'+f.name+'</span>'
+      +'<button class="file-chip-del" onclick="event.stopPropagation();pendingFiles.splice('+i+',1);renderFilePreviews()">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+function openFileData(idx){
+  var f=pendingFiles[idx];
+  if(!f)return;
+  var w=window.open();
+  if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
+    w.document.write('<html><body style="margin:0;background:#222"><embed src="'+f.data+'" type="application/pdf" width="100%" height="100%"></body></html>');
+  } else if(f.type.startsWith('image/')){
+    w.document.write('<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+f.data+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+  } else {
+    var a=w.document.createElement('a');
+    a.href=f.data; a.download=f.name; a.click();
+    w.close();
+  }
+}
+
+function openDetailFile(data,name,type){
+  var w=window.open();
+  if(type==='pdf'||name.toLowerCase().endsWith('.pdf')){
+    w.document.write('<html><body style="margin:0;background:#222"><embed src="'+data+'" type="application/pdf" width="100%" height="100%"></body></html>');
+  } else if(type==='img'){
+    w.document.write('<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+data+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+  } else {
+    var a=w.document.createElement('a');
+    a.href=data; a.download=name; a.click(); w.close();
+  }
+}
+
+
   var inp = document.createElement('input');
   inp.type = 'file';
   inp.accept = 'image/*';
