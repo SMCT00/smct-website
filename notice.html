@@ -694,8 +694,15 @@ function openFrameViewer(data,name,isHtml){
 }
 
 function openNoticeViewer(src){
-  document.getElementById('vImg').src=src;
-  document.getElementById('viewerModal').style.display='flex';
+  var modal=document.getElementById('viewerModal');
+  var img=document.getElementById('vImg');
+  var frame=document.getElementById('vFrame');
+  frame.style.display='none';
+  frame.src='';
+  document.getElementById('vFileName').textContent='';
+  img.src=src;
+  img.style.display='block';
+  modal.style.display='flex';
 }
 function closeViewer(){
   var modal=document.getElementById('viewerModal');
