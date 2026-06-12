@@ -292,7 +292,7 @@ if('serviceWorker' in navigator){
       <label>파일 첨부 (이미지·PDF·문서 등)</label>
       <div class="img-thumbs" id="imgThumbs"></div>
       <input type="file" id="imgInput" accept="image/*" multiple style="display:none" onchange="addImages(this.files)">
-      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx,.zip,.txt" multiple style="display:none" onchange="addFiles(this.files)">
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx,.zip,.txt,.html,.htm" multiple style="display:none" onchange="addFiles(this.files)">
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
         <button type="button" onclick="openImgChooser()"
           style="background:transparent;border:1px dashed rgba(184,149,42,.3);
@@ -666,6 +666,7 @@ function getFileIcon(name){
   if(['hwp'].includes(ext)) return '📋';
   if(['zip','rar'].includes(ext)) return '🗜️';
   if(['txt'].includes(ext)) return '📃';
+  if(['html','htm'].includes(ext)) return '🌐';
   return '📎';
 }
 
@@ -696,8 +697,11 @@ function openFileData(idx){
   var f=pendingFiles[idx];
   if(!f)return;
   var w=window.open();
+  var isHtml=f.name.toLowerCase().endsWith('.html')||f.name.toLowerCase().endsWith('.htm');
   if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
     w.document.write('<html><body style="margin:0;background:#222"><embed src="'+f.data+'" type="application/pdf" width="100%" height="100%"></body></html>');
+  } else if(isHtml){
+    w.document.open();w.document.write(atob(f.data.split(',')[1]));w.document.close();
   } else if(f.type.startsWith('image/')){
     w.document.write('<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+f.data+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
   } else {
