@@ -236,7 +236,9 @@ if('serviceWorker' in navigator){
 </section>
 <div class="viewer-bg" id="viewerModal" onclick="if(event.target===this)closeViewer()" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.96);align-items:center;justify-content:center;flex-direction:column">
   <button onclick="closeViewer()" style="position:absolute;top:16px;right:20px;background:rgba(184,149,42,.2);border:1px solid rgba(184,149,42,.4);color:#B8952A;width:46px;height:46px;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%">×</button>
-  <img id="vImg" src="" alt="" style="max-width:96vw;max-height:92vh;object-fit:contain">
+  <img id="vImg" src="" alt="" style="max-width:96vw;max-height:92vh;object-fit:contain;display:none">
+  <iframe id="vFrame" src="" style="display:none;width:96vw;height:92vh;border:none;background:#fff;border-radius:4px"></iframe>
+  <div id="vFileName" style="color:rgba(184,149,42,.7);font-size:12px;margin-top:8px;font-family:'Noto Sans KR',sans-serif"></div>
 </div>
 
 <!-- 로그인 모달 -->
@@ -625,12 +627,35 @@ function saveData(){ ghSaveJSON('data/notices.json',posts); }
 
 
 
+function openFrameViewer(data,name,isHtml){
+  var modal=document.getElementById('viewerModal');
+  var frame=document.getElementById('vFrame');
+  var img=document.getElementById('vImg');
+  var fname=document.getElementById('vFileName');
+  img.style.display='none'; img.src='';
+  fname.textContent=name||'';
+  if(isHtml){
+    var blob=new Blob([atob(data.split(',')[1])],{type:'text/html'});
+    frame.src=URL.createObjectURL(blob);
+  } else {
+    frame.src=data;
+  }
+  frame.style.display='block';
+  modal.style.display='flex';
+}
+
 function openNoticeViewer(src){
   document.getElementById('vImg').src=src;
   document.getElementById('viewerModal').style.display='flex';
 }
 function closeViewer(){
-  document.getElementById('viewerModal').style.display='none';
+  var modal=document.getElementById('viewerModal');
+  modal.style.display='none';
+  document.getElementById('vImg').style.display='none';
+  document.getElementById('vImg').src='';
+  document.getElementById('vFrame').style.display='none';
+  document.getElementById('vFrame').src='';
+  document.getElementById('vFileName').textContent='';
 }
 
 // 초기화: IndexedDB에서 로드
@@ -698,30 +723,29 @@ function renderFilePreviews(){
 function openFileData(idx){
   var f=pendingFiles[idx];
   if(!f)return;
-  var w=window.open();
   var isHtml=f.name.toLowerCase().endsWith('.html')||f.name.toLowerCase().endsWith('.htm');
-  if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
-    w.document.write('<html><body style="margin:0;background:#222"><embed src="'+f.data+'" type="application/pdf" width="100%" height="100%"></body></html>');
-  } else if(isHtml){
-    w.document.open();w.document.write(atob(f.data.split(',')[1]));w.document.close();
-  } else if(f.type.startsWith('image/')){
-    w.document.write('<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+f.data+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+  var isPdf=f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf');
+  var isImg=f.type.startsWith('image/');
+  if(isImg){
+    openNoticeViewer(f.data);
+  } else if(isHtml||isPdf){
+    openFrameViewer(f.data,f.name,isHtml);
   } else {
-    var a=w.document.createElement('a');
+    var a=document.createElement('a');
     a.href=f.data; a.download=f.name; a.click();
-    w.close();
   }
 }
 
 function openDetailFile(data,name,type){
-  var w=window.open();
-  if(type==='pdf'||name.toLowerCase().endsWith('.pdf')){
-    w.document.write('<html><body style="margin:0;background:#222"><embed src="'+data+'" type="application/pdf" width="100%" height="100%"></body></html>');
-  } else if(type==='img'){
-    w.document.write('<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+data+'" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>');
+  var isHtml=name.toLowerCase().endsWith('.html')||name.toLowerCase().endsWith('.htm');
+  var isPdf=type==='pdf'||name.toLowerCase().endsWith('.pdf');
+  if(type==='img'){
+    openNoticeViewer(data);
+  } else if(isPdf||isHtml){
+    openFrameViewer(data,name,isHtml);
   } else {
-    var a=w.document.createElement('a');
-    a.href=data; a.download=name; a.click(); w.close();
+    var a=document.createElement('a');
+    a.href=data; a.download=name; a.click();
   }
 }
 
