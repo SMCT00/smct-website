@@ -635,7 +635,11 @@ function openFrameViewer(data,name,isHtml){
   img.style.display='none'; img.src='';
   fname.textContent=name||'';
   if(isHtml){
-    var blob=new Blob([atob(data.split(',')[1])],{type:'text/html'});
+    var b64=data.split(',')[1];
+    var bin=atob(b64);
+    var bytes=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++){bytes[i]=bin.charCodeAt(i);}
+    var blob=new Blob([bytes],{type:'text/html;charset=utf-8'});
     frame.src=URL.createObjectURL(blob);
   } else {
     frame.src=data;
