@@ -655,9 +655,76 @@ function renderFilePreviews(){
 function openImgChooser(){ var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true; inp.onchange=function(){addImages(this.files);}; inp.click(); }
 function openFileChooser(){ var inp=document.createElement('input'); inp.type='file'; inp.accept='.pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx,.zip,.txt'; inp.multiple=true; inp.onchange=function(){addFiles(this.files);}; inp.click(); }
 
-function openViewer(src){ var m=document.getElementById('viewerModal'); document.getElementById('vImg').src=src; document.getElementById('vImg').style.display='block'; document.getElementById('vFrame').style.display='none'; m.style.display='flex'; }
+function openViewer(src){ openNoticeViewer(src); }
 function closeViewer(){ document.getElementById('viewerModal').style.display='none'; document.getElementById('vImg').style.display='none'; document.getElementById('vImg').src=''; document.getElementById('vFrame').style.display='none'; document.getElementById('vFrame').src=''; document.getElementById('vFileName').textContent=''; }
-function openDetailFile(data,name,type){ var a=document.createElement('a'); a.href=data; a.download=name; a.click(); }
+
+/* ══ 이미지 / PDF / HTML 뷰어 ══ */
+function openFrameViewer(data, name, isHtml) {
+  var modal = document.getElementById('viewerModal');
+  var frame = document.getElementById('vFrame');
+  var img   = document.getElementById('vImg');
+  var fname = document.getElementById('vFileName');
+  img.style.display = 'none'; img.src = '';
+  fname.textContent = name || '';
+  if (isHtml) {
+    var b64  = data.split(',')[1];
+    var bin  = atob(b64);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); }
+    var blob = new Blob([bytes], { type: 'text/html;charset=utf-8' });
+    frame.src = URL.createObjectURL(blob);
+  } else {
+    frame.src = data;
+  }
+  frame.style.display = 'block';
+  modal.style.display = 'flex';
+}
+
+function openNoticeViewer(src) {
+  var modal = document.getElementById('viewerModal');
+  var img   = document.getElementById('vImg');
+  var frame = document.getElementById('vFrame');
+  frame.style.display = 'none'; frame.src = '';
+  document.getElementById('vFileName').textContent = '';
+  img.src = src;
+  img.style.display = 'block';
+  modal.style.display = 'flex';
+}
+
+function closeViewer() {
+  document.getElementById('viewerModal').style.display = 'none';
+  document.getElementById('vImg').style.display = 'none';
+  document.getElementById('vImg').src = '';
+  document.getElementById('vFrame').style.display = 'none';
+  document.getElementById('vFrame').src = '';
+  document.getElementById('vFileName').textContent = '';
+}
+
+
+function getFileType(name, mimeType) {
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  if (mimeType && mimeType.startsWith('image/')) return 'img';
+  if (['jpg','jpeg','png','gif','webp','bmp','svg'].includes(ext)) return 'img';
+  if (ext === 'pdf') return 'pdf';
+  if (['html','htm'].includes(ext)) return 'html';
+  return mimeType || ext;
+}
+
+function openDetailFile(data, name, type) {
+  var isHtml = name.toLowerCase().endsWith('.html') || name.toLowerCase().endsWith('.htm');
+  var isPdf  = type === 'pdf' || name.toLowerCase().endsWith('.pdf');
+  var isImg  = type === 'img' || (typeof type === 'string' && type.startsWith('image/'));
+  if (isImg) {
+    openNoticeViewer(data);
+  } else if (isPdf || isHtml) {
+    openFrameViewer(data, name, isHtml);
+  } else {
+    /* 그 외 파일(hwp, xlsx 등)은 다운로드 */
+    var a = document.createElement('a');
+    a.href = data; a.download = name; a.click();
+  }
+}
+
 
 // 이벤트
 document.getElementById('wmClose').addEventListener('click',closeWrite);
