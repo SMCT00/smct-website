@@ -10,7 +10,7 @@
 <style>
 .page-hero{height:35vh;position:relative;display:flex;align-items:flex-end;padding:0 60px 50px;
   background:linear-gradient(160deg,rgba(10,10,10,.15) 0%,rgba(10,10,10,.5) 50%,rgba(10,10,10,.97) 100%),
-  url('https://images.pexels.com/photos/236698/pexels-photo-236698.jpeg?w=1920&q=90') center/cover}
+  url('https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=1920&q=90') center/cover}
 .page-hero-title{font-family:'Noto Serif KR',serif;font-size:clamp(32px,5vw,60px);font-weight:300}
 .page-hero-title strong{color:#D4AF55}
 
@@ -38,30 +38,104 @@
   border-color:rgba(184,149,42,.5);color:#B8952A}
 
 /* 품목 카드 그리드 */
-.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
-.item-card{background:linear-gradient(145deg,#1a1c20,#22252b);border:1px solid rgba(184,149,42,.12);
-  cursor:pointer;transition:all .3s cubic-bezier(.25,.46,.45,.94);overflow:hidden;position:relative;
-  box-shadow:0 2px 12px rgba(0,0,0,.3)}
-.item-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(184,149,42,.3),transparent);opacity:0;transition:opacity .3s}
-.item-card:hover{border-color:rgba(184,149,42,.5);transform:translateY(-4px);
-  box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 20px rgba(184,149,42,.08)}
+/* ── 블로그 리스트 스타일 ── */
+.items-grid{display:flex;flex-direction:column;gap:0}
+
+.item-card{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid rgba(184,149,42,.1);
+  cursor:pointer;
+  transition:background .25s;
+  position:relative;
+  overflow:hidden;
+  min-height:200px;
+}
+.item-card:first-child{border-top:1px solid rgba(184,149,42,.1)}
+.item-card:hover{background:rgba(184,149,42,.04)}
+.item-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,#B8952A,#D4AF55);
+  opacity:0;transition:opacity .25s
+}
 .item-card:hover::before{opacity:1}
-.item-card-img{width:100%;height:180px;object-fit:cover;display:block;
-  filter:brightness(.85);transition:filter .3s}
-.item-card:hover .item-card-img{filter:brightness(1)}
-.item-card-body{padding:16px 18px 18px}
-.item-card-cat{font-size:9px;letter-spacing:2px;color:#D4AF55;
-  border:1px solid rgba(184,149,42,.4);padding:3px 10px;display:inline-block;margin-bottom:10px;
-  background:rgba(184,149,42,.06);font-family:'Noto Sans KR',sans-serif;font-weight:500}
-.item-card-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:400;
-  color:#f7f4ee;line-height:1.55;margin-bottom:8px;text-shadow:0 1px 3px rgba(0,0,0,.3)}
-.item-card-desc{font-size:12px;color:rgba(247,244,238,.45);line-height:1.75;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.item-card-meta{margin-top:12px;font-size:10px;color:rgba(247,244,238,.25);
-  display:flex;justify-content:space-between;align-items:center}
-.item-card-actions{display:none;gap:6px;position:absolute;top:10px;right:10px}
+
+/* 썸네일 영역 */
+.item-card-img{
+  width:100%;height:100%;min-height:200px;
+  object-fit:cover;display:block;
+  filter:brightness(.8) saturate(.9);
+  transition:filter .35s;
+  flex-shrink:0;
+}
+.item-card:hover .item-card-img{filter:brightness(.95) saturate(1)}
+
+/* 이미지 없을 때 */
+.item-card-img-placeholder{
+  width:100%;min-height:200px;
+  background:linear-gradient(135deg,#0f1114,#1a1c20);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+}
+
+/* 본문 영역 */
+.item-card-body{
+  padding:28px 32px 24px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.item-card-cat{
+  font-size:9px;letter-spacing:2.5px;color:#B8952A;
+  font-family:'Noto Sans KR',sans-serif;font-weight:500;
+  text-transform:uppercase;margin-bottom:12px;display:block;
+}
+.item-card-title{
+  font-family:'Noto Serif KR',serif;font-size:19px;font-weight:400;
+  color:#f7f4ee;line-height:1.5;margin-bottom:14px;
+  transition:color .2s;
+}
+.item-card:hover .item-card-title{color:#D4AF55}
+.item-card-desc{
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:13px;color:rgba(247,244,238,.5);line-height:1.9;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+  flex:1;white-space:pre-line;
+}
+.item-card-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:20px;padding-top:16px;border-top:1px solid rgba(184,149,42,.08);
+}
+.item-card-meta{
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:10px;color:rgba(247,244,238,.25);letter-spacing:.5px;
+  display:flex;gap:12px;align-items:center;
+}
+.item-card-arrow{
+  font-size:11px;letter-spacing:2px;color:rgba(184,149,42,.4);
+  font-family:'Noto Sans KR',sans-serif;transition:color .2s,transform .2s;display:flex;align-items:center;gap:6px;
+}
+.item-card:hover .item-card-arrow{color:#D4AF55;transform:translateX(4px)}
+
+/* 핀 고정 카드 — 살짝 강조 */
+.item-card.pinned{background:rgba(184,149,42,.03)}
+.item-card.pinned .item-card-title{color:#e8d490}
+
+/* 관리자 버튼 */
+.item-card-actions{display:none;gap:6px;position:absolute;top:12px;right:12px;z-index:10}
 .item-card-actions.on{display:flex}
+
+/* 이미지 첨부 썸네일 미리보기 (여러 장) */
+.item-card-imgs{
+  display:flex;gap:3px;margin-top:10px;
+}
+.item-card-imgs img{width:44px;height:44px;object-fit:cover;border-radius:2px;opacity:.7;border:1px solid rgba(184,149,42,.2)}
+
+@media(max-width:700px){
+  .item-card{grid-template-columns:1fr;min-height:auto}
+  .item-card-img{min-height:180px;max-height:220px}
+  .item-card-body{padding:18px 16px}
+  .item-card-title{font-size:16px}
+}
 .ic-edit,.ic-del{width:28px;height:28px;border-radius:50%;border:none;
   cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
 .ic-edit{background:rgba(184,149,42,.85);color:#000}
@@ -198,9 +272,9 @@
     
     <!-- 배경 이미지 슬라이드 (3장) -->
     <div id="heroSlider" style="position:absolute;inset:0;z-index:0">
-      <div class="hero-slide active" style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/236698/pexels-photo-236698.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
-      <div class="hero-slide" style="position:absolute;inset:0;opacity:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/1058959/pexels-photo-1058959.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
-      <div class="hero-slide" style="position:absolute;inset:0;opacity:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/159306/construction-site-build-construction-work-159306.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
+      <div class="hero-slide active" style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
+      <div class="hero-slide" style="position:absolute;inset:0;opacity:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/1117452/pexels-photo-1117452.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
+      <div class="hero-slide" style="position:absolute;inset:0;opacity:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/442587/pexels-photo-442587.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
     </div>
 
     <!-- 황금 장식선 -->
@@ -256,7 +330,7 @@
       <div style="display:flex;min-width:max-content">
         <!-- 소재 이미지 카드들 -->
         <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer;border-right:1px solid rgba(184,149,42,.1)" onclick="filterCat('Exterior',document.querySelector('.cat-btn:nth-child(2)'))">
-          <img src="https://images.pexels.com/photos/1078884/pexels-photo-1078884.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <img src="https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
             <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">EXTERIOR</div>
             <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">외벽·도장</div>
@@ -523,16 +597,46 @@ function renderList(){
   var normal=filtered.filter(function(p){return p.pin!=='1';});
   var sorted=pinned.concat(normal);
   grid.innerHTML=sorted.map(function(p){
-    var thumb=(p.images&&p.images.length)?'<img class="item-card-img" src="'+p.images[0]+'" alt="'+p.title+'">':'<div class="item-card-img" style="background:linear-gradient(135deg,#0f1114 0%,#1a1c20 50%,#0f1114 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px"><div style=\"font-size:36px;opacity:.2\">📦</div><div style=\"font-size:9px;letter-spacing:3px;color:rgba(184,149,42,.3);font-family:Noto Sans KR,sans-serif\">NO IMAGE</div></div>';
-    return '<div class="item-card" onclick="openDetail(\''+p.id+'\')">'
+    /* 썸네일 */
+    var thumb = (p.images && p.images.length)
+      ? '<img class="item-card-img" src="'+p.images[0]+'" alt="'+p.title+'">'
+      : '<div class="item-card-img-placeholder"><div style="font-size:40px;opacity:.15">📦</div><div style="font-size:9px;letter-spacing:3px;color:rgba(184,149,42,.25);font-family:Noto Sans KR,sans-serif;margin-top:6px">NO IMAGE</div></div>';
+
+    /* 추가 이미지 미리보기 (2장 이상이면) */
+    var extraImgs = '';
+    if(p.images && p.images.length > 1){
+      extraImgs = '<div class="item-card-imgs">'
+        + p.images.slice(1,4).map(function(src){ return '<img src="'+src+'" alt="">'; }).join('')
+        + (p.images.length > 4 ? '<div style="width:44px;height:44px;background:rgba(184,149,42,.1);display:flex;align-items:center;justify-content:center;font-size:10px;color:#B8952A;border:1px solid rgba(184,149,42,.2)">+'+( p.images.length-4)+'</div>' : '')
+        + '</div>';
+    }
+
+    /* 파일 첨부 배지 */
+    var fileBadge = (p.files && p.files.length)
+      ? '<span style="font-size:9px;color:rgba(100,149,237,.6);letter-spacing:1px">📎 '+p.files.length+'개 파일</span>'
+      : '';
+
+    return '<div class="item-card'+(p.pin==='1'?' pinned':'')+'" onclick="openDetail(\''+p.id+'\')">'
       +(isAdmin?'<div class="item-card-actions on"><button class="ic-edit" onclick="event.stopPropagation();openEdit(\''+p.id+'\')" title="수정">✏</button><button class="ic-del" onclick="event.stopPropagation();delPost(\''+p.id+'\')" title="삭제">×</button></div>':'')
-      +thumb
+      + thumb
       +'<div class="item-card-body">'
-      +'<div class="item-card-cat">'+p.cat+(p.pin==='1'?' 📌':'')+'</div>'
-      +'<div class="item-card-title">'+p.title+'</div>'
-      +'<div class="item-card-desc">'+p.content+'</div>'
-      +'<div class="item-card-meta"><span>'+p.author+'</span><span>'+p.date+'</span></div>'
-      +'</div></div>';
+        +'<div>'
+          +'<span class="item-card-cat">'+(p.pin==='1'?'📌 ':'')+p.cat+'</span>'
+          +'<div class="item-card-title">'+p.title+'</div>'
+          +'<div class="item-card-desc">'+p.content+'</div>'
+          + extraImgs
+        +'</div>'
+        +'<div class="item-card-footer">'
+          +'<div class="item-card-meta">'
+            +'<span>'+p.author+'</span>'
+            +'<span style="opacity:.4">·</span>'
+            +'<span>'+p.date+'</span>'
+            + fileBadge
+          +'</div>'
+          +'<div class="item-card-arrow">자세히 보기 →</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
   }).join('');
 }
 
