@@ -432,6 +432,7 @@
       <div class="d-meta" id="dMeta"></div>
       <div class="d-content" id="dContent"></div>
       <div class="d-images" id="dImages"></div>
+      <div id="dInlineContent" style="margin-top:32px"></div>
       <div id="dFiles" style="margin-top:28px;display:flex;flex-direction:column;gap:8px;padding:24px 0 8px;border-top:1px solid rgba(184,149,42,.12);"></div>
     </div>
   </section>
@@ -640,6 +641,9 @@ function renderList(){
   }).join('');
 }
 
+
+function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function openDetail(id){
   var p=posts.find(function(x){return x.id===id;});
   if(!p)return;
@@ -648,18 +652,57 @@ function openDetail(id){
   document.getElementById('dTitle').textContent=p.title;
   document.getElementById('dMeta').textContent=p.author+' · '+p.date;
   document.getElementById('dContent').textContent=p.content;
+
   var imgHtml='';
   if(p.images&&p.images.length){ imgHtml=p.images.map(function(src){ return '<img src="'+src+'" alt="" style="cursor:pointer" onclick="openViewer(this.src)">'; }).join(''); }
   document.getElementById('dImages').innerHTML=imgHtml;
+
+  /* HTML 파일은 본문에 인라인 iframe으로 삽입(블로그처럼), 그 외 파일은 칩으로 */
   var fileHtml='';
+  var inlineHtml='';
   if(p.files&&p.files.length){
-    fileHtml=p.files.map(function(f){
-      return '<div class="file-chip" onclick="openDetailFile(\''+f.data+'\',\''+f.name+'\',\''+f.type+'\')">'
-        +'<span class="chip-icon">'+getFileIcon(f.name)+'</span>'
-        +'<span class="chip-name">'+f.name+'</span></div>';
-    }).join('');
+    p.files.forEach(function(f,i){
+      var isHtmlFile = f.name.toLowerCase().endsWith('.html') || f.name.toLowerCase().endsWith('.htm');
+      if(isHtmlFile){
+        inlineHtml += '<div class="inline-html-embed" data-src="'+escapeAttr(f.data)+'" id="inlineFrame_'+viewId+'_'+i+'"></div>';
+      } else {
+        fileHtml += '<div class="file-chip" onclick="openDetailFile(\''+f.data+'\',\''+f.name+'\',\''+f.type+'\')">'
+          +'<span class="chip-icon">'+getFileIcon(f.name)+'</span>'
+          +'<span class="chip-name">'+f.name+'</span></div>';
+      }
+    });
   }
   document.getElementById('dFiles').innerHTML=fileHtml;
+
+  /* 인라인 HTML 블로그 콘텐츠 영역 */
+  var inlineBox=document.getElementById('dInlineContent');
+  inlineBox.innerHTML=inlineHtml;
+
+  /* iframe 생성 및 자동 높이 조절 */
+  inlineBox.querySelectorAll('.inline-html-embed').forEach(function(holder){
+    var b64=holder.getAttribute('data-src');
+    var pure=b64.indexOf(',')>-1?b64.split(',')[1]:b64;
+    var decoded='';
+    try{ decoded=decodeURIComponent(escape(atob(pure))); }catch(e){ try{ decoded=atob(pure); }catch(e2){ decoded=''; } }
+    var iframe=document.createElement('iframe');
+    iframe.srcdoc=decoded;
+    iframe.style.cssText='width:100%;border:none;display:block;background:transparent;min-height:400px;border-radius:6px;overflow:hidden';
+    iframe.setAttribute('scrolling','no');
+    iframe.onload=function(){
+      try{
+        var doc=iframe.contentWindow.document;
+        var h=doc.documentElement.scrollHeight || doc.body.scrollHeight;
+        iframe.style.height=(h+40)+'px';
+        /* 내부 링크/스크립트로 인한 재계산 대비 */
+        setTimeout(function(){
+          var h2=doc.documentElement.scrollHeight || doc.body.scrollHeight;
+          if(h2>h) iframe.style.height=(h2+40)+'px';
+        },400);
+      }catch(e){ iframe.style.height='600px'; }
+    };
+    holder.appendChild(iframe);
+  });
+
   document.getElementById('mainView').style.display='none';
   document.getElementById('detailView').classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
