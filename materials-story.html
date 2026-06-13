@@ -193,16 +193,117 @@
 
 <section style="background:var(--black)">
 
-  <div class="page-hero">
-    <div class="page-hero-title" style="font-size:clamp(36px,5vw,68px);font-weight:200;line-height:1.15">
-      취급품목 · <strong style="color:#D4AF55;font-weight:500">신자재</strong>
+  <!-- ══ 럭셔리 히어로 ══ -->
+  <div style="position:relative;height:70vh;min-height:520px;overflow:hidden;display:flex;align-items:flex-end">
+    
+    <!-- 배경 이미지 슬라이드 (3장) -->
+    <div id="heroSlider" style="position:absolute;inset:0;z-index:0">
+      <div class="hero-slide active" style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/236698/pexels-photo-236698.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
+      <div class="hero-slide" style="position:absolute;inset:0;opacity:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/1058959/pexels-photo-1058959.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
+      <div class="hero-slide" style="position:absolute;inset:0;opacity:0;background:linear-gradient(160deg,rgba(5,5,5,.7) 0%,rgba(5,5,5,.3) 50%,rgba(5,5,5,.85) 100%),url('https://images.pexels.com/photos/159306/construction-site-build-construction-work-159306.jpeg?w=1920&q=90') center/cover;transition:opacity 1.2s ease"></div>
     </div>
-    <p style="font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:300;color:rgba(247,244,238,.45);letter-spacing:3px;margin-top:16px">
-      SMCT CONSTRUCTION — Materials &amp; Innovation
-    </p>
+
+    <!-- 황금 장식선 -->
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,#B8952A 30%,#D4AF55 50%,#B8952A 70%,transparent 100%);z-index:2"></div>
+
+    <!-- 히어로 콘텐츠 -->
+    <div style="position:relative;z-index:3;padding:0 60px 56px;width:100%;max-width:1200px">
+      
+      <!-- eyebrow -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#B8952A)"></div>
+        <span style="font-family:'Noto Sans KR',sans-serif;font-size:10px;font-weight:400;letter-spacing:4px;color:#B8952A;text-transform:uppercase">SMCT Construction — Materials &amp; Innovation</span>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,#B8952A,transparent)"></div>
+      </div>
+
+      <!-- 메인 타이틀 -->
+      <h1 style="font-family:'Noto Serif KR',serif;font-size:clamp(42px,6vw,80px);font-weight:200;color:#fff;line-height:1.1;margin-bottom:6px;letter-spacing:-1px">
+        취급품목
+        <span style="display:block;font-size:clamp(40px,5.5vw,72px);font-weight:600;background:linear-gradient(135deg,#B8952A 0%,#D4AF55 40%,#E8C84A 60%,#B8952A 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">신자재</span>
+      </h1>
+
+      <!-- 서브 텍스트 -->
+      <p style="font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:300;color:rgba(247,244,238,.55);letter-spacing:1px;max-width:480px;line-height:1.9;margin-top:16px">
+        현장에서 직접 검증한 신소재와 혁신 자재.<br>
+        드론 외벽도장부터 태양열 냉난방까지 — 에스엠씨티건설의 기술력.
+      </p>
+
+      <!-- 품목 수 카운터 -->
+      <div style="display:flex;gap:40px;margin-top:32px">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:#D4AF55;line-height:1"><span id="countNum">0</span></div>
+          <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(247,244,238,.35);margin-top:4px;text-transform:uppercase">등록 품목</div>
+        </div>
+        <div style="width:1px;background:rgba(184,149,42,.2)"></div>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:#D4AF55;line-height:1">6</div>
+          <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(247,244,238,.35);margin-top:4px;text-transform:uppercase">카테고리</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 슬라이더 인디케이터 -->
+    <div style="position:absolute;right:40px;bottom:40px;z-index:3;display:flex;flex-direction:column;gap:8px">
+      <div class="slide-dot active-dot" style="width:2px;height:24px;background:#D4AF55;cursor:pointer" onclick="goSlide(0)"></div>
+      <div class="slide-dot" style="width:2px;height:24px;background:rgba(184,149,42,.3);cursor:pointer" onclick="goSlide(1)"></div>
+      <div class="slide-dot" style="width:2px;height:24px;background:rgba(184,149,42,.3);cursor:pointer" onclick="goSlide(2)"></div>
+    </div>
   </div>
 
+  <!-- ══ 소재 카테고리 쇼케이스 배너 ══ -->
+  <div style="background:linear-gradient(90deg,#0a0a0a 0%,#141414 50%,#0a0a0a 100%);border-top:1px solid rgba(184,149,42,.15);border-bottom:1px solid rgba(184,149,42,.15);padding:0;overflow:hidden">
+    <div style="display:flex;overflow-x:auto;scrollbar-width:none">
+      <div style="display:flex;min-width:max-content">
+        <!-- 소재 이미지 카드들 -->
+        <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer;border-right:1px solid rgba(184,149,42,.1)" onclick="filterCat('Exterior',document.querySelector('.cat-btn:nth-child(2)'))">
+          <img src="https://images.pexels.com/photos/1078884/pexels-photo-1078884.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
+            <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">EXTERIOR</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">외벽·도장</div>
+          </div>
+        </div>
+        <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer;border-right:1px solid rgba(184,149,42,.1)" onclick="filterCat('Interior',document.querySelector('.cat-btn:nth-child(3)'))">
+          <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
+            <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">INTERIOR</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">실내·마감</div>
+          </div>
+        </div>
+        <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer;border-right:1px solid rgba(184,149,42,.1)" onclick="filterCat('창호·커튼월',document.querySelector('.cat-btn:nth-child(4)'))">
+          <img src="https://images.pexels.com/photos/380768/pexels-photo-380768.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
+            <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">WINDOW</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">창호·커튼월</div>
+          </div>
+        </div>
+        <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer;border-right:1px solid rgba(184,149,42,.1)" onclick="filterCat('에너지·설비',document.querySelector('.cat-btn:nth-child(5)'))">
+          <img src="https://images.pexels.com/photos/9875441/pexels-photo-9875441.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
+            <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">ENERGY</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">에너지·설비</div>
+          </div>
+        </div>
+        <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer;border-right:1px solid rgba(184,149,42,.1)" onclick="filterCat('스마트팜',document.querySelector('.cat-btn:nth-child(6)'))">
+          <img src="https://images.pexels.com/photos/2132171/pexels-photo-2132171.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
+            <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">SMART FARM</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">스마트팜</div>
+          </div>
+        </div>
+        <div style="position:relative;width:200px;height:130px;flex-shrink:0;overflow:hidden;cursor:pointer" onclick="filterCat('구조재',document.querySelector('.cat-btn:nth-child(7)'))">
+          <img src="https://images.pexels.com/photos/1117452/pexels-photo-1117452.jpeg?w=400&q=80" style="width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.8);transition:all .4s" onmouseover="this.style.filter='brightness(.7) saturate(1)'" onmouseout="this.style.filter='brightness(.5) saturate(.8)'">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px">
+            <div style="font-family:'Noto Sans KR',sans-serif;font-size:9px;letter-spacing:3px;color:#B8952A;margin-bottom:4px">STRUCTURE</div>
+            <div style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:300;color:#fff">구조재</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 섹션 본문 ══ -->
   <section>
+
     <!-- 관리자 툴바 -->
     <div class="admin-bar" id="adminBar">
       <span>🔓 관리자 모드 — 취급품목 관리 중</span>
@@ -360,6 +461,22 @@
 </div>
 
 <script>
+
+// 히어로 슬라이더
+var slideIdx = 0;
+var slides = document.querySelectorAll('.hero-slide');
+var dots = document.querySelectorAll('.slide-dot');
+function goSlide(n) {
+  slides[slideIdx].style.opacity = '0';
+  dots[slideIdx].style.background = 'rgba(184,149,42,.3)';
+  dots[slideIdx].style.height = '24px';
+  slideIdx = n;
+  slides[slideIdx].style.opacity = '1';
+  dots[slideIdx].style.background = '#D4AF55';
+  dots[slideIdx].style.height = '32px';
+}
+setInterval(function() { goSlide((slideIdx+1) % slides.length); }, 5000);
+
 var PW_HASH='c21jdDIwMjYh';
 var SK='smct_items_v1';
 var DATA_PATH='data/items.json';
