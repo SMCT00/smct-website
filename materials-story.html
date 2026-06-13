@@ -717,13 +717,35 @@ function openDetail(id){
     iframe.onload=function(){
       try{
         var doc=iframe.contentWindow.document;
-        var h=doc.documentElement.scrollHeight || doc.body.scrollHeight;
-        iframe.style.height=(h+40)+'px';
-        /* 내부 링크/스크립트로 인한 재계산 대비 */
-        setTimeout(function(){
-          var h2=doc.documentElement.scrollHeight || doc.body.scrollHeight;
-          if(h2>h) iframe.style.height=(h2+40)+'px';
-        },400);
+
+        /* 세로로 긴 포스터·사진이 화면을 가득 채우는 것 방지 — 이미지 높이 제한 */
+        var capStyle=doc.createElement('style');
+        capStyle.textContent =
+          'img{max-width:100% !important;height:auto !important;}'+
+          'img:not(.icon):not(.logo):not(.item-icon){max-height:520px !important;object-fit:cover !important;display:block;margin:0 auto;}'+
+          '.hero,.hero-img,[class*="hero"]{max-height:480px !important;overflow:hidden !important;}'+
+          '.hero img,.hero-img img{width:100% !important;height:100% !important;object-fit:cover !important;}'+
+          'body{overflow-x:hidden !important}';
+        doc.head.appendChild(capStyle);
+
+        function recalc(){
+          var h=Math.max(doc.documentElement.scrollHeight||0, doc.body.scrollHeight||0);
+          iframe.style.height=(h+40)+'px';
+        }
+        recalc();
+
+        /* 이미지가 늦게 로드되면서 콘텐츠가 잘리는 것 방지 — 로드마다 재계산 */
+        var imgs=doc.querySelectorAll('img');
+        imgs.forEach(function(img){
+          if(!img.complete){
+            img.addEventListener('load', recalc);
+            img.addEventListener('error', recalc);
+          }
+        });
+
+        /* 폰트·지연 렌더링 대비 다단계 재계산 */
+        [80,300,700,1300,2200,3500].forEach(function(t){ setTimeout(recalc, t); });
+
       }catch(e){ iframe.style.height='600px'; }
     };
     holder.appendChild(iframe);
