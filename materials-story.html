@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>취급품목·신자재 | 에스엠씨티건설</title>
+<meta name="description" content="에스엠씨티건설이 직접 취급하는 신소재·신자재 이야기 — 현장에서 검증된 제품과 기술">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
+
+:root {
+  --bg:       #f9f6f0;
+  --ink:      #1c1814;
+  --mid:      #5a4e40;
+  --light:    #9a8c7a;
+  --line:     #e2d9cc;
+  --gold:     #b08d3a;
+  --gold-lt:  #cba84e;
+  --dark-bg:  #0f1410;
+  --dark-mid: #1a2418;
+  --green:    #4a7a50;
+  --green-lt: #7ab882;
+  --steel:    #3a5a3a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Noto Serif KR', serif;
+  font-weight: 300;
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 사이트 헤더 ── */
+.site-header {
+  background: var(--dark-bg);
+  padding: 14px 6vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid #1a2818;
+}
+.site-logo {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--gold-lt);
+  letter-spacing: .1em;
+  text-decoration: none;
+}
+.site-logo span {
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: 300;
+  font-size: .68rem;
+  color: #3a4e3a;
+  letter-spacing: .15em;
+}
+.site-nav a {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .72rem;
+  font-weight: 300;
+  color: #3a4e3a;
+  text-decoration: none;
+  letter-spacing: .12em;
+  border-bottom: 1px solid #1e3020;
+  padding-bottom: 1px;
+  transition: color .2s;
+}
+.site-nav a:hover { color: var(--gold-lt); }
+
+/* ── 시리즈 히어로 ── */
+.series-hero {
+  background: linear-gradient(160deg, #0a1a0c 0%, #132418 45%, #0e180a 100%);
+  padding: 80px 6vw 70px;
+  position: relative;
+  overflow: hidden;
+}
+.series-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 75% 25%, rgba(80,180,80,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 25% 75%, rgba(180,149,42,.05) 0%, transparent 70%);
+}
+.hero-eyebrow {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .7rem;
+  font-weight: 400;
+  letter-spacing: .25em;
+  color: var(--green-lt);
+  opacity: .75;
+  margin-bottom: 18px;
+  position: relative;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  position: relative;
+  margin-bottom: 10px;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--green-lt);
+}
+.hero-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .88rem;
+  font-weight: 300;
+  color: rgba(255,255,255,.42);
+  letter-spacing: .08em;
+  margin-top: 18px;
+  position: relative;
+  max-width: 560px;
+  line-height: 1.85;
+}
+
+/* ── 카테고리 탭 ── */
+.cat-bar {
+  background: var(--dark-mid);
+  padding: 0 6vw;
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #1a2818;
+}
+.cat-tab {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .68rem;
+  font-weight: 400;
+  letter-spacing: .15em;
+  color: rgba(255,255,255,.3);
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.cat-tab:hover { color: rgba(255,255,255,.6); }
+.cat-tab.active {
+  color: var(--green-lt);
+  border-bottom-color: var(--green-lt);
+}
+
+/* ── 목록 섹션 ── */
+.list-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 6vw 100px;
+}
+.section-label {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: .22em;
+  color: var(--steel);
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ── 품목 카드 ── */
+.post-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  margin-bottom: 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .25s, transform .25s;
+  position: relative;
+  overflow: hidden;
+}
+.post-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+  transform: translateY(-2px);
+}
+.post-card-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(.92);
+  transition: filter .3s;
+}
+.post-card:hover .post-card-img { filter: brightness(1); }
+
+.post-card-body {
+  padding: 28px 30px 30px;
+}
+.card-series-tag {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .62rem;
+  font-weight: 500;
+  letter-spacing: .2em;
+  color: var(--steel);
+  background: #eaf2ea;
+  display: inline-block;
+  padding: 3px 10px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.18rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.card-desc {
+  font-size: .88rem;
+  font-weight: 300;
+  color: var(--mid);
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
+.card-meta {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .68rem;
+  font-weight: 300;
+  color: var(--light);
+  letter-spacing: .08em;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.card-badge {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .6rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: var(--green);
+  border: 1px solid rgba(74,122,80,.35);
+  padding: 2px 8px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.card-arrow {
+  position: absolute;
+  right: 30px;
+  bottom: 28px;
+  font-size: .8rem;
+  color: var(--steel);
+  opacity: 0;
+  transition: opacity .2s, right .2s;
+}
+.post-card:hover .card-arrow { opacity: 1; right: 24px; }
+
+/* 대표 피처드 카드 */
+.post-card.featured {
+  background: linear-gradient(160deg, #0a1a0c, #132418);
+  border-color: transparent;
+  color: #fff;
+}
+.post-card.featured .post-card-img {
+  height: 300px;
+  opacity: .5;
+}
+.post-card.featured .post-card-body { padding: 30px 34px 32px; }
+.post-card.featured .card-series-tag {
+  background: rgba(74,122,80,.2);
+  color: var(--green-lt);
+}
+.post-card.featured .card-title { font-size: 1.45rem; color: #fff; }
+.post-card.featured .card-desc { color: rgba(255,255,255,.52); }
+.post-card.featured .card-meta { color: rgba(255,255,255,.28); }
+.post-card.featured .card-arrow { color: var(--green-lt); }
+.post-card.featured .card-badge {
+  color: var(--green-lt);
+  border-color: rgba(122,184,130,.4);
+}
+
+/* 스펙 그리드 (카드 내 간단 스펙) */
+.spec-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.spec-chip {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .62rem;
+  font-weight: 400;
+  color: var(--steel);
+  background: #f0f5f0;
+  border: 1px solid #d8e8d8;
+  padding: 3px 10px;
+  letter-spacing: .06em;
+}
+.post-card.featured .spec-chip {
+  background: rgba(74,122,80,.15);
+  border-color: rgba(74,122,80,.3);
+  color: rgba(255,255,255,.55);
+}
+
+/* 준비 중 */
+.coming-soon-badge {
+  display: inline-block;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .6rem;
+  font-weight: 500;
+  letter-spacing: .15em;
+  color: var(--light);
+  border: 1px solid var(--line);
+  padding: 2px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.post-card.dimmed { opacity: .5; pointer-events: none; }
+
+/* 업로드 안내 */
+.upload-guide {
+  background: #f0f5f0;
+  border-left: 3px solid var(--green);
+  padding: 20px 24px;
+  margin-top: 48px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .82rem;
+  font-weight: 400;
+  color: #3a4e3a;
+  line-height: 1.75;
+}
+.upload-guide strong { font-weight: 600; }
+
+/* reveal */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.on { opacity: 1; transform: none; }
+
+/* ── 푸터 ── */
+.site-footer {
+  background: var(--dark-bg);
+  padding: 40px 6vw;
+  border-top: 1px solid #1a2818;
+}
+.footer-inner { max-width: 900px; margin: 0 auto; }
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #1a2818;
+}
+.footer-brand-name {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--gold-lt);
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+.footer-brand-sub {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .68rem;
+  font-weight: 300;
+  color: #2a3e2a;
+  letter-spacing: .1em;
+  line-height: 1.7;
+}
+.footer-url {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .72rem;
+  font-weight: 300;
+  color: #2a3e2a;
+  text-decoration: none;
+  letter-spacing: .1em;
+  border-bottom: 1px solid #1e3020;
+  padding-bottom: 1px;
+}
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-copy, .footer-rights {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .65rem;
+  font-weight: 300;
+  color: #1e3020;
+  line-height: 1.8;
+  letter-spacing: .06em;
+}
+
+@media (max-width: 600px) {
+  .series-hero { padding: 60px 5vw 50px; }
+  .list-section { padding: 48px 5vw 80px; }
+  .post-card.featured .post-card-img { height: 220px; }
+  .cat-bar { gap: 0; }
+  .cat-tab { padding: 12px 14px; font-size: .62rem; }
+  .footer-top, .footer-bottom { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="site-header">
+  <a href="https://smct00.co.kr/index.html" class="site-logo">
+    에스엠씨티건설 <span>SMCT Construction</span>
+  </a>
+  <nav class="site-nav">
+    <a href="https://smct00.co.kr/index.html">← 홈으로</a>
+  </nav>
+</header>
+
+<!-- 히어로 -->
+<section class="series-hero">
+  <div class="hero-eyebrow">SMCT건설 × Materials & Innovation</div>
+  <h1 class="hero-title">취급품목 · <em>신자재</em></h1>
+  <p class="hero-sub">
+    현장에서 직접 검증한 신소재와 혁신 자재들.<br>
+    드론 도장부터 태양열 냉난방 시스템까지 — 에스엠씨티건설이 취급하는 미래 건설 자재.
+  </p>
+</section>
+
+<!-- 카테고리 탭 -->
+<nav class="cat-bar">
+  <span class="cat-tab active">전체</span>
+  <span class="cat-tab">Exterior</span>
+  <span class="cat-tab">Interior</span>
+  <span class="cat-tab">창호·커튼월</span>
+  <span class="cat-tab">에너지·설비</span>
+  <span class="cat-tab">스마트팜</span>
+  <span class="cat-tab">구조재</span>
+</nav>
+
+<!-- 목록 -->
+<section class="list-section">
+  <div class="section-label">전체 품목</div>
+
+  <!-- 01 피처드: 드론 외벽도장 시스템 -->
+  <a href="https://smct00.co.kr/mat-drone-painting.html" class="post-card featured reveal">
+    <img
+      class="post-card-img"
+      src="https://images.pexels.com/photos/442587/pexels-photo-442587.jpeg?w=1200&q=85"
+      alt="드론 외벽도장"
+    >
+    <div class="post-card-body">
+      <div class="card-series-tag">외벽·도장 · 01</div>
+      <div class="card-title">아파트 외벽을 드론으로 — 무인 도장 시스템의 현재</div>
+      <div class="spec-grid">
+        <span class="spec-chip">작업고도 최대 150m</span>
+        <span class="spec-chip">도장 속도 500㎡/hr</span>
+        <span class="spec-chip">친환경 수성도료</span>
+        <span class="spec-chip">비계 불필요</span>
+      </div>
+      <p class="card-desc">
+        고층 아파트 외벽 재도장에서 비계 설치 비용이 전체 공사비의 30~40%를 차지합니다.
+        드론 도장 시스템은 이 구조를 완전히 바꿉니다.
+        에스엠씨티건설이 직접 운용하며 검증한 무인 도장 공법의 기술 스펙과 현장 적용 사례.
+      </p>
+      <div class="card-meta">
+        <span>에스엠씨티건설 기술팀</span>
+        <span>읽는 시간 약 5분</span>
+        <span class="card-badge">직접 취급</span>
+      </div>
+      <span class="card-arrow">자세히 →</span>
+    </div>
+  </a>
+
+  <!-- 02: 태양열+히트펌프 냉난방 -->
+  <a href="https://smct00.co.kr/mat-solar-heat.html" class="post-card reveal">
+    <img
+      class="post-card-img"
+      src="https://images.pexels.com/photos/9875441/pexels-photo-9875441.jpeg?w=900&q=85"
+      alt="태양열 히트펌프 냉난방"
+    >
+    <div class="post-card-body">
+      <div class="card-series-tag">에너지·설비 · 01</div>
+      <div class="card-title">냉난방비 제로를 향해 — 태양열·히트펌프 복합 시스템</div>
+      <div class="spec-grid">
+        <span class="spec-chip">COP 4.2 이상</span>
+        <span class="spec-chip">냉난방 일체형</span>
+        <span class="spec-chip">정부보조금 대상</span>
+      </div>
+      <p class="card-desc">
+        태양열 집열판과 히트펌프를 결합해 여름엔 냉방, 겨울엔 난방을 사실상 무료로 운용하는 시스템.
+        초기 투자비 회수 기간, 실제 운영비 절감 수치, 국내 설치 사례를 정리했습니다.
+      </p>
+      <div class="card-meta">
+        <span>에스엠씨티건설 기술팀</span>
+        <span>읽는 시간 약 7분</span>
+        <span class="card-badge">신재생에너지</span>
+      </div>
+      <span class="card-arrow">자세히 →</span>
+    </div>
+  </a>
+
+  <!-- 03: 알루미늄 커튼월 -->
+  <a href="https://smct00.co.kr/mat-curtainwall.html" class="post-card reveal">
+    <img
+      class="post-card-img"
+      src="https://images.pexels.com/photos/380768/pexels-photo-380768.jpeg?w=900&q=85"
+      alt="알루미늄 커튼월"
+    >
+    <div class="post-card-body">
+      <div class="card-series-tag">창호·커튼월 · 01</div>
+      <div class="card-title">알루미늄 커튼월 — 단열·방음·내풍압 세 마리 토끼</div>
+      <div class="spec-grid">
+        <span class="spec-chip">단열성 U=0.8 W/㎡K</span>
+        <span class="spec-chip">내풍압 2,400Pa</span>
+        <span class="spec-chip">STC 45dB</span>
+      </div>
+      <p class="card-desc">
+        유리 면적이 넓어질수록 단열 손실이 커지는 딜레마.
+        에스엠씨티건설이 취급하는 고성능 알루미늄 커튼월 시스템의 핵심 스펙과
+        아파트·오피스 적용 시 에너지 절감 효과를 분석합니다.
+      </p>
+      <div class="card-meta">
+        <span>에스엠씨티건설 기술팀</span>
+        <span>읽는 시간 약 5분</span>
+        <span class="card-badge">직접 취급</span>
+      </div>
+      <span class="card-arrow">자세히 →</span>
+    </div>
+  </a>
+
+  <!-- 04: 스마트팜 자재 (준비 중) -->
+  <div class="post-card dimmed reveal">
+    <img
+      class="post-card-img"
+      src="https://images.pexels.com/photos/2132171/pexels-photo-2132171.jpeg?w=900&q=85"
+      alt="스마트팜"
+    >
+    <div class="post-card-body">
+      <div class="card-series-tag">스마트팜 · 01 <span class="coming-soon-badge">COMING SOON</span></div>
+      <div class="card-title">수직농장 구조재 — 스마트팜 시공에 쓰이는 자재의 모든 것</div>
+      <p class="card-desc">
+        LED 조명, 양액 배관, 경량 철골 구조재, 차광·보온 필름까지.
+        에스엠씨티건설 스마트팜 사업부가 실제 시공에 적용하는 자재 리스트와 단가 구조.
+      </p>
+      <div class="card-meta">
+        <span>에스엠씨티건설 스마트팜팀</span>
+        <span>곧 업로드 예정</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05: 고강도 EPS 단열재 (준비 중) -->
+  <div class="post-card dimmed reveal">
+    <img
+      class="post-card-img"
+      src="https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?w=900&q=85"
+      alt="단열재"
+    >
+    <div class="post-card-body">
+      <div class="card-series-tag">구조·내장재 · 01 <span class="coming-soon-badge">COMING SOON</span></div>
+      <div class="card-title">패시브하우스 기준을 맞추는 신형 단열재 — EPS vs PIR vs VIP 비교</div>
+      <p class="card-desc">
+        같은 두께, 다른 성능. 세 가지 단열재의 열전도율·내습성·시공성·가격을
+        현장 실측 데이터 기반으로 비교합니다.
+      </p>
+      <div class="card-meta">
+        <span>에스엠씨티건설 기술팀</span>
+        <span>곧 업로드 예정</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 업로드 안내 -->
+  <div class="upload-guide reveal">
+    <strong>📌 새 품목·자재 업로드 안내</strong><br>
+    이 페이지는 <strong>영화이야기·건축가이야기 시리즈</strong>와 동일한 방식으로 운영됩니다.<br>
+    새 품목 소개글은 같은 HTML 형식으로 제작 후 서버에 업로드하시면 카드가 자동 추가됩니다.<br>
+    글 제작 요청은 편집팀에 문의해 주세요.
+  </div>
+</section>
+
+<!-- 푸터 -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">에스엠씨티건설</div>
+        <div class="footer-brand-sub">
+          SMCT Construction Co., Ltd.<br>
+          건설 · 신소재 · 스마트 시공의 새로운 기준
+        </div>
+      </div>
+      <div>
+        <a href="https://smct00.co.kr" target="_blank" class="footer-url">www.smct00.co.kr</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">
+        에스엠씨티건설 — 취급품목·신자재 시리즈<br>
+        현장에서 검증된 신소재와 혁신 자재
+      </div>
+      <div class="footer-rights">
+        © 에스엠씨티건설 (SMCT Construction Co., Ltd.)<br>
+        본 콘텐츠의 모든 저작권은 에스엠씨티건설에 있습니다.<br>
+        무단 전재 및 재배포를 금합니다.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 카테고리 탭
+  document.querySelectorAll('.cat-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  // reveal 애니메이션
+  const els = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  els.forEach(el => io.observe(el));
+</script>
+</body>
+</html>
