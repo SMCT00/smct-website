@@ -697,6 +697,19 @@ function openDetail(id){
     /* opacity:0 / translateY 초기 스타일이 inline으로 박혀있는 경우도 대비 */
     decoded = decoded.replace(/opacity:\s*0\s*;?/gi, 'opacity:1;');
 
+    /* 블러 placeholder(lazy-load) 효과 제거 — blur filter 무력화 */
+    decoded = decoded.replace(/filter:\s*blur\([^)]*\)\s*;?/gi, '');
+    decoded = decoded.replace(/backdrop-filter:\s*blur\([^)]*\)\s*;?/gi, '');
+
+    /* data-src(지연로딩 원본 이미지)를 src로 즉시 적용 */
+    decoded = decoded.replace(/<img\b([^>]*?)\sdata-src=(["'])([^"']*)\2([^>]*)>/gi, function(m, pre, q, realSrc, post){
+      var attrs = (pre + ' ' + post).replace(/\ssrc=(["'])[^"']*\1/gi, '');
+      return '<img' + attrs + ' src="' + realSrc + '">';
+    });
+
+    /* loading="lazy" 제거 — 즉시 로드 */
+    decoded = decoded.replace(/\sloading=(["'])lazy\1/gi, '');
+
     var iframe=document.createElement('iframe');
     iframe.srcdoc=decoded;
     iframe.style.cssText='width:100%;border:none;display:block;background:transparent;min-height:400px;border-radius:6px;overflow:hidden';
