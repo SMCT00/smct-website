@@ -783,8 +783,18 @@ function openDetail(id){
           }
         }
         heroEls.forEach(function(el){
-          var rect=el.getBoundingClientRect();
-          var fixedH=Math.max(rect.height, 360);
+          /* 1단계: 92vh 등 뷰포트 단위 제약을 임시로 풀고, 콘텐츠가 결정하는
+             '자연스러운' 높이를 측정한다 (flex-shrink로 줄어든 값이 아닌 실제 필요 높이) */
+          el.style.setProperty('height', 'auto', 'important');
+          el.style.setProperty('min-height', '0', 'important');
+          el.style.setProperty('max-height', 'none', 'important');
+          el.style.setProperty('overflow', 'visible', 'important');
+
+          var rect = el.getBoundingClientRect();
+          var fixedH = Math.max(rect.height, 360);
+
+          /* 2단계: 측정한 자연스러운 높이로 고정 — 이후 iframe이 커져도
+             92vh가 다시 적용되며 폭주하는 것을 방지 */
           el.style.setProperty('height', fixedH+'px', 'important');
           el.style.setProperty('min-height', fixedH+'px', 'important');
           el.style.setProperty('max-height', fixedH+'px', 'important');
