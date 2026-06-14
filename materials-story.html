@@ -740,9 +740,8 @@ function openDetail(id){
         var capStyle=doc.createElement('style');
         capStyle.textContent =
           'img{max-width:100% !important;height:auto !important;}'+
-          'img:not(.icon):not(.logo):not(.item-icon){max-height:520px !important;object-fit:cover !important;object-position:center top !important;display:block;margin:0 auto;}'+
-          '.hero,.hero-img,[class*="hero"]{max-height:480px !important;overflow:hidden !important;}'+
-          '.hero img,.hero-img img{width:100% !important;height:100% !important;object-fit:cover !important;object-position:center top !important;}'+
+          'img:not(.icon):not(.logo):not(.item-icon):not(.hero-img){max-height:520px !important;object-fit:cover !important;object-position:center top !important;display:block;margin:0 auto;}'+
+          '.hero-img,img.hero-img{max-height:520px !important;width:100% !important;object-fit:cover !important;object-position:center top !important;}'+
           'body{overflow-x:hidden !important}';
         doc.head.appendChild(capStyle);
 
