@@ -432,6 +432,7 @@
       <div class="d-meta" id="dMeta"></div>
       <div class="d-content" id="dContent"></div>
       <div class="d-images" id="dImages"></div>
+      <div id="dEmbedUrl" style="margin-top:32px;display:none"></div>
       <div id="dInlineContent" style="margin-top:32px"></div>
       <div id="dFiles" style="margin-top:28px;display:flex;flex-direction:column;gap:8px;padding:24px 0 8px;border-top:1px solid rgba(184,149,42,.12);"></div>
     </div>
@@ -495,6 +496,10 @@
     <div class="f-group">
       <label>품목 설명 *</label>
       <textarea id="wContent" placeholder="사용처 :&#10;특  징 :&#10;규  격 :&#10;비  고 :"></textarea>
+    </div>
+    <div class="f-group">
+      <label>블로그 글 URL (선택) — Blogger 등 게시된 글 주소를 넣으면 본문에 그대로 펼쳐서 보여줍니다</label>
+      <input type="url" id="wEmbedUrl" placeholder="https://smct00.blogspot.com/2026/06/blog-post_13.html">
     </div>
     <div class="f-group">
       <label>사진 · 파일 첨부</label>
@@ -678,6 +683,21 @@ function openDetail(id){
   var inlineBox=document.getElementById('dInlineContent');
   inlineBox.innerHTML=inlineHtml;
 
+  /* 블로그 URL(embedUrl)이 있으면 — Blogger 등 게시된 페이지를 그대로 iframe으로 임베드 */
+  var embedBox=document.getElementById('dEmbedUrl');
+  if(p.embedUrl){
+    embedBox.style.display='block';
+    embedBox.innerHTML='<iframe src="'+escapeAttr(p.embedUrl)+'" loading="lazy" '
+      +'style="width:100%;height:1400px;border:none;display:block;border-radius:6px;background:#fff" '
+      +'scrolling="yes"></iframe>'
+      +'<div style="margin-top:8px;text-align:right"><a href="'+escapeAttr(p.embedUrl)+'" target="_blank" '
+      +'style="font-size:11px;color:rgba(184,149,42,.6);font-family:\'Noto Sans KR\',sans-serif;text-decoration:none">'
+      +'원문 새 탭에서 보기 ↗</a></div>';
+  } else {
+    embedBox.style.display='none';
+    embedBox.innerHTML='';
+  }
+
   /* iframe 생성 및 자동 높이 조절 */
   inlineBox.querySelectorAll('.inline-html-embed').forEach(function(holder){
     var b64=holder.getAttribute('data-src');
@@ -746,6 +766,7 @@ function openWrite(){
   document.getElementById('wTitle').value='';
   document.getElementById('wAuthor').value='';
   document.getElementById('wContent').value='';
+  document.getElementById('wEmbedUrl').value='';
   document.getElementById('imgThumbs').innerHTML='';
   document.getElementById('filePreviews').innerHTML='';
   document.getElementById('writeModal').classList.add('on');
@@ -763,6 +784,7 @@ function openEdit(id){
   document.getElementById('wTitle').value=p.title;
   document.getElementById('wAuthor').value=p.author;
   document.getElementById('wContent').value=p.content;
+  document.getElementById('wEmbedUrl').value=p.embedUrl||'';
   renderImgThumbs(); renderFilePreviews();
   document.getElementById('writeModal').classList.add('on');
   setTimeout(function(){document.getElementById('wTitle').focus();},100);
@@ -773,15 +795,16 @@ function closeWrite(){ document.getElementById('writeModal').classList.remove('o
 function savePost(){
   var title=document.getElementById('wTitle').value.trim();
   var content=document.getElementById('wContent').value.trim();
+  var embedUrl=document.getElementById('wEmbedUrl').value.trim();
   if(!title){alert('품목명을 입력해주세요.');return;}
   if(!content){alert('품목 설명을 입력해주세요.');return;}
   if(editId){
     var p=posts.find(function(x){return x.id===editId;});
-    if(p){ p.cat=document.getElementById('wCat').value; p.pin=document.getElementById('wPin').value; p.title=title; p.author=document.getElementById('wAuthor').value.trim()||'에스엠씨티건설'; p.content=content; p.images=pendingImgs.slice(); p.files=pendingFiles.slice(); }
+    if(p){ p.cat=document.getElementById('wCat').value; p.pin=document.getElementById('wPin').value; p.title=title; p.author=document.getElementById('wAuthor').value.trim()||'에스엠씨티건설'; p.content=content; p.images=pendingImgs.slice(); p.files=pendingFiles.slice(); p.embedUrl=embedUrl; }
   } else {
     var now=new Date();
     var dateStr=now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+String(now.getDate()).padStart(2,'0');
-    posts.unshift({ id:'i'+Date.now(), cat:document.getElementById('wCat').value, pin:document.getElementById('wPin').value, title:title, author:document.getElementById('wAuthor').value.trim()||'에스엠씨티건설', content:content, date:dateStr, images:pendingImgs.slice(), files:pendingFiles.slice() });
+    posts.unshift({ id:'i'+Date.now(), cat:document.getElementById('wCat').value, pin:document.getElementById('wPin').value, title:title, author:document.getElementById('wAuthor').value.trim()||'에스엠씨티건설', content:content, date:dateStr, images:pendingImgs.slice(), files:pendingFiles.slice(), embedUrl:embedUrl });
   }
   closeWrite(); renderList(); saveData();
 }
