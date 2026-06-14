@@ -697,61 +697,20 @@ function openDetail(id){
     });
     decoded = decoded.split('opacity:0').join('opacity:1');
     decoded = decoded.split('opacity: 0').join('opacity: 1');
-    decoded = decoded.split('opacity:.0').join('opacity:1');
 
-    /* 블러 placeholder(lazy-load) 효과 제거 — filter:blur(...) / backdrop-filter:blur(...) 무력화 (정규식 대신 문자열 스캔) */
-    (function(){
-      var guard = 0;
-      while(guard++ < 50){
-        var lower = decoded.toLowerCase();
-        var idx = lower.indexOf('blur(');
-        if(idx === -1) break;
-        var closeP = decoded.indexOf(')', idx);
-        if(closeP === -1) break;
-        var colon = decoded.lastIndexOf(':', idx);
-        var start = (colon !== -1 && idx - colon < 25) ? colon + 1 : idx;
-        decoded = decoded.slice(0, start) + 'none' + decoded.slice(closeP + 1);
-      }
-    })();
-
-    /* data-src(지연로딩 원본 이미지)를 즉시 src로 적용 — 큰따옴표/작은따옴표 모두 처리 */
-    decoded = decoded.replace(new RegExp('<img([^>]*) data-src="([^"]*)"([^>]*)>', 'gi'), function(m, pre, real, post){
-      var attrs = (pre + ' ' + post).replace(new RegExp('src="[^"]*"','gi'), '');
-      return '<img' + attrs + ' src="' + real + '">';
-    });
-    decoded = decoded.replace(new RegExp("<img([^>]*) data-src='([^']*)'([^>]*)>", 'gi'), function(m, pre, real, post){
-      var attrs = (pre + ' ' + post).replace(new RegExp("src='[^']*'",'gi'), '');
-      return '<img' + attrs + ' src="' + real + '">';
-    });
-
-    /* loading="lazy" 제거 — 즉시 로드 */
-    decoded = decoded.split(' loading="lazy"').join('');
-    decoded = decoded.split(" loading='lazy'").join('');
 
     var iframe=document.createElement('iframe');
     iframe.srcdoc=decoded;
     iframe.style.cssText='width:100%;border:none;display:block;background:transparent;min-height:400px;border-radius:6px;overflow:hidden';
     iframe.setAttribute('scrolling','no');
-    iframe.onload=function(){
+        iframe.onload=function(){
       try{
         var doc=iframe.contentWindow.document;
-
-        /* 세로로 긴 포스터·사진이 화면을 가득 채우는 것 방지 — 이미지 높이 제한 */
-        var capStyle=doc.createElement('style');
-        capStyle.textContent =
-          'img{max-width:100% !important;height:auto !important;}'+
-          'img:not(.icon):not(.logo):not(.item-icon):not(.hero-img){max-height:520px !important;object-fit:cover !important;object-position:center top !important;display:block;margin:0 auto;}'+
-          '.hero-img,img.hero-img{max-height:520px !important;width:100% !important;object-fit:cover !important;object-position:center top !important;}'+
-          'body{overflow-x:hidden !important}';
-        doc.head.appendChild(capStyle);
-
         function recalc(){
           var h=Math.max(doc.documentElement.scrollHeight||0, doc.body.scrollHeight||0);
           iframe.style.height=(h+40)+'px';
         }
         recalc();
-
-        /* 이미지가 늦게 로드되면서 콘텐츠가 잘리는 것 방지 — 로드마다 재계산 */
         var imgs=doc.querySelectorAll('img');
         imgs.forEach(function(img){
           if(!img.complete){
@@ -759,12 +718,10 @@ function openDetail(id){
             img.addEventListener('error', recalc);
           }
         });
-
-        /* 폰트·지연 렌더링 대비 다단계 재계산 */
         [80,300,700,1300,2200,3500].forEach(function(t){ setTimeout(recalc, t); });
-
       }catch(e){ iframe.style.height='600px'; }
     };
+
     holder.appendChild(iframe);
   });
 
