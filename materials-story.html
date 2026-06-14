@@ -684,31 +684,49 @@ function openDetail(id){
     var pure=b64.indexOf(',')>-1?b64.split(',')[1]:b64;
     var decoded='';
     try{ decoded=decodeURIComponent(escape(atob(pure))); }catch(e){ try{ decoded=atob(pure); }catch(e2){ decoded=''; } }
+    /* 사이트 자체 헤더/네비/푸터(site-header, site-nav, site-footer)만 제거 — 글 본문의 메타(footer) 정보는 보존 */
+    decoded = decoded.replace(new RegExp('<header[^>]*class="[^"]*site-header[^"]*"[^>]*>[^]*?</header>', 'gi'), '');
+    decoded = decoded.replace(new RegExp('<nav[^>]*class="[^"]*site-nav[^"]*"[^>]*>[^]*?</nav>', 'gi'), '');
+    decoded = decoded.replace(new RegExp('<footer[^>]*class="[^"]*site-footer[^"]*"[^>]*>[^]*?</footer>', 'gi'), '');
 
-    /* 첨부 페이지 자체의 헤더/푸터/네비게이션 제거 — 본문만 자연스럽게 삽입 */
-    decoded = decoded.replace(/<header[\s\S]*?<\/header>/gi, '');
-    decoded = decoded.replace(/<footer[\s\S]*?<\/footer>/gi, '');
-    decoded = decoded.replace(/<nav[\s\S]*?<\/nav>/gi, '');
-
-    /* 스크롤 reveal 애니메이션 강제 활성화 (iframe 안에서는 동작 안 하므로) */
-    decoded = decoded.replace(/class="([^"]*\breveal\b[^"]*)"/gi, function(m, cls){
-      return cls.indexOf(' on')>-1 || cls.indexOf('on ')>-1 || cls==='on' ? m : 'class="'+cls+' on"';
+    /* 스크롤 reveal 애니메이션 강제 활성화 (iframe 안에서는 IntersectionObserver가 사실상 동작 안 함) */
+    decoded = decoded.replace(new RegExp('class="([^"]*)"', 'gi'), function(m, cls){
+      var parts = cls.split(' ').filter(function(x){ return x.length; });
+      if(parts.indexOf('reveal') !== -1 && parts.indexOf('on') === -1){ parts.push('on'); }
+      return 'class="' + parts.join(' ') + '"';
     });
-    /* opacity:0 / translateY 초기 스타일이 inline으로 박혀있는 경우도 대비 */
-    decoded = decoded.replace(/opacity:\s*0\s*;?/gi, 'opacity:1;');
+    decoded = decoded.split('opacity:0').join('opacity:1');
+    decoded = decoded.split('opacity: 0').join('opacity: 1');
+    decoded = decoded.split('opacity:.0').join('opacity:1');
 
-    /* 블러 placeholder(lazy-load) 효과 제거 — blur filter 무력화 */
-    decoded = decoded.replace(/filter:\s*blur\([^)]*\)\s*;?/gi, '');
-    decoded = decoded.replace(/backdrop-filter:\s*blur\([^)]*\)\s*;?/gi, '');
+    /* 블러 placeholder(lazy-load) 효과 제거 — filter:blur(...) / backdrop-filter:blur(...) 무력화 (정규식 대신 문자열 스캔) */
+    (function(){
+      var guard = 0;
+      while(guard++ < 50){
+        var lower = decoded.toLowerCase();
+        var idx = lower.indexOf('blur(');
+        if(idx === -1) break;
+        var closeP = decoded.indexOf(')', idx);
+        if(closeP === -1) break;
+        var colon = decoded.lastIndexOf(':', idx);
+        var start = (colon !== -1 && idx - colon < 25) ? colon + 1 : idx;
+        decoded = decoded.slice(0, start) + 'none' + decoded.slice(closeP + 1);
+      }
+    })();
 
-    /* data-src(지연로딩 원본 이미지)를 src로 즉시 적용 */
-    decoded = decoded.replace(/<img\b([^>]*?)\sdata-src=(["'])([^"']*)\2([^>]*)>/gi, function(m, pre, q, realSrc, post){
-      var attrs = (pre + ' ' + post).replace(/\ssrc=(["'])[^"']*\1/gi, '');
-      return '<img' + attrs + ' src="' + realSrc + '">';
+    /* data-src(지연로딩 원본 이미지)를 즉시 src로 적용 — 큰따옴표/작은따옴표 모두 처리 */
+    decoded = decoded.replace(new RegExp('<img([^>]*) data-src="([^"]*)"([^>]*)>', 'gi'), function(m, pre, real, post){
+      var attrs = (pre + ' ' + post).replace(new RegExp('src="[^"]*"','gi'), '');
+      return '<img' + attrs + ' src="' + real + '">';
+    });
+    decoded = decoded.replace(new RegExp("<img([^>]*) data-src='([^']*)'([^>]*)>", 'gi'), function(m, pre, real, post){
+      var attrs = (pre + ' ' + post).replace(new RegExp("src='[^']*'",'gi'), '');
+      return '<img' + attrs + ' src="' + real + '">';
     });
 
     /* loading="lazy" 제거 — 즉시 로드 */
-    decoded = decoded.replace(/\sloading=(["'])lazy\1/gi, '');
+    decoded = decoded.split(' loading="lazy"').join('');
+    decoded = decoded.split(" loading='lazy'").join('');
 
     var iframe=document.createElement('iframe');
     iframe.srcdoc=decoded;
