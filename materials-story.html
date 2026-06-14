@@ -720,6 +720,32 @@ function openDetail(id){
     decoded = decoded.split('opacity:0').join('opacity:1');
     decoded = decoded.split('opacity: 0').join('opacity: 1');
 
+    /* 블러 placeholder(lazy-load) 효과 제거 — filter: blur(...) 선언만 정확히 제거 (다른 CSS는 보존) */
+    (function(){
+      var marker = 'blur(';
+      var guard = 0;
+      while(guard++ < 100){
+        var lower = decoded.toLowerCase();
+        var idx = lower.indexOf(marker);
+        if(idx === -1) break;
+        var closeP = decoded.indexOf(')', idx);
+        if(closeP === -1) break;
+        /* "filter:" 또는 "-webkit-filter:" 뒤에 오는 blur(...)만 제거. 그 외 blur(은 건드리지 않음 */
+        var before = decoded.slice(Math.max(0, idx-20), idx).toLowerCase();
+        var fi = before.lastIndexOf('filter');
+        if(fi === -1){
+          /* filter 선언이 아니면 — 무한루프 방지를 위해 이 blur(는 건너뛰도록 표시문자로 치환 후 나중에 복원 */
+          decoded = decoded.slice(0, idx) + 'BLURSKIP' + decoded.slice(idx + marker.length);
+          continue;
+        }
+        var colonRel = before.indexOf(':', fi);
+        var start = (colonRel !== -1) ? (Math.max(0, idx-20) + colonRel + 1) : idx;
+        decoded = decoded.slice(0, start) + 'none' + decoded.slice(closeP + 1);
+      }
+      decoded = decoded.split('BLURSKIP').join('blur(');
+    })();
+
+
 
     var iframe=document.createElement('iframe');
     iframe.srcdoc=decoded;
@@ -728,6 +754,34 @@ function openDetail(id){
         iframe.onload=function(){
       try{
         var doc=iframe.contentWindow.document;
+
+        /* 세로로 긴 이미지(포스터 등)가 화면을 가득 채우는 것 방지 - img 태그에만 적용, 히어로 섹션 자체는 건드리지 않음 */
+        var capStyle=doc.createElement('style');
+        capStyle.textContent =
+          'img:not(.icon):not(.logo){max-height:520px;width:auto;max-width:100%;object-fit:cover;object-position:center top;display:block;margin:0 auto;}'+
+          '.hero-img,img.hero-img{width:100%;height:100%;object-fit:cover;object-position:center top;}'+
+          'body{overflow-x:hidden}';
+        doc.head.appendChild(capStyle);
+
+        /* "92vh" 같은 뷰포트 단위 히어로 높이가, iframe을 본문 길이만큼 키운 뒤
+           다시 "그 큰 iframe의 92%"로 재계산되어 무한히 커지는 문제 방지.
+           iframe이 아직 작을 때의 실제 높이를 px로 고정해버린다. */
+        var heroEls=[];
+        var allEls=doc.querySelectorAll('[class]');
+        for(var hi=0; hi<allEls.length; hi++){
+          var elClasses=allEls[hi].className;
+          if(typeof elClasses==='string' && (' '+elClasses+' ').indexOf(' hero ')!==-1){
+            heroEls.push(allEls[hi]);
+          }
+        }
+        heroEls.forEach(function(el){
+          var rect=el.getBoundingClientRect();
+          var fixedH=Math.max(rect.height, 360);
+          el.style.setProperty('height', fixedH+'px', 'important');
+          el.style.setProperty('min-height', fixedH+'px', 'important');
+          el.style.setProperty('max-height', fixedH+'px', 'important');
+        });
+
         function recalc(){
           var h=Math.max(doc.documentElement.scrollHeight||0, doc.body.scrollHeight||0);
           iframe.style.height=(h+40)+'px';
