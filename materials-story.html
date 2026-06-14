@@ -437,6 +437,9 @@
       <div id="dEmbedUrl" style="margin-top:32px;display:none"></div>
       <div id="dInlineContent" style="margin-top:32px"></div>
       <div id="dFiles" style="margin-top:28px;display:flex;flex-direction:column;gap:8px;padding:24px 0 8px;border-top:1px solid rgba(184,149,42,.12);"></div>
+      <div style="margin-top:32px;padding-top:24px;border-top:1px solid rgba(184,149,42,.12);text-align:center">
+        <button class="back-btn" onclick="goBack()" style="display:inline-flex;margin:0 auto">← 목록으로 돌아가기</button>
+      </div>
     </div>
   </section>
 </section>
@@ -660,9 +663,14 @@ function openDetail(id){
   document.getElementById('dMeta').textContent=p.author+' · '+p.date;
   document.getElementById('dContent').textContent=p.content;
 
+  /* HTML 파일 임베드 또는 블로그 URL이 있는지 먼저 확인 */
+  var hasHtmlFileEmbed = !!(p.files && p.files.some(function(f){ return f.name.toLowerCase().endsWith('.html') || f.name.toLowerCase().endsWith('.htm'); }));
+  var hasInlineEmbed = hasHtmlFileEmbed || !!p.embedUrl;
+
   var imgHtml='';
-  if(p.images&&p.images.length){ imgHtml=p.images.map(function(src){ return '<img src="'+src+'" alt="" style="cursor:pointer" onclick="openViewer(this.src)">'; }).join(''); }
+  if(!hasInlineEmbed && p.images&&p.images.length){ imgHtml=p.images.map(function(src){ return '<img src="'+src+'" alt="" style="cursor:pointer" onclick="openViewer(this.src)">'; }).join(''); }
   document.getElementById('dImages').innerHTML=imgHtml;
+  document.getElementById('dImages').style.display = hasInlineEmbed ? 'none' : '';
 
   /* HTML 파일은 본문에 인라인 iframe으로 삽입(블로그처럼), 그 외 파일은 칩으로 */
   var fileHtml='';
