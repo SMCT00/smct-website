@@ -185,6 +185,16 @@
   white-space:pre-wrap;word-break:break-word}
 .d-images{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:24px}
 .d-images img{width:100%;max-height:520px;object-fit:contain;background:#0a0a0a;border-radius:4px;cursor:pointer}
+/* 동영상 바로 재생 */
+.d-video-wrap{max-width:440px;margin:0 auto 18px}
+.d-video{width:100%;max-height:82vh;display:block;background:#000;border-radius:6px;border:1px solid rgba(184,149,42,.25)}
+.d-video-meta{text-align:right;margin-top:8px}
+.d-video-meta a{font-size:11px;color:rgba(184,149,42,.6);text-decoration:none;font-family:'Noto Sans KR',sans-serif}
+.d-yt{position:relative;width:100%;margin:0 auto;background:#000;border-radius:6px;overflow:hidden}
+.d-yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.play-badge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;
+  background:rgba(0,0,0,.55);border:1.5px solid rgba(212,175,85,.85);color:#D4AF55;display:flex;align-items:center;
+  justify-content:center;font-size:20px;padding-left:4px;box-sizing:border-box;pointer-events:none}
 
 /* 모달 — 포트폴리오와 동일 */
 .modal-bg{display:none;position:fixed;inset:0;z-index:9000;
@@ -371,6 +381,7 @@ if('serviceWorker' in navigator){
     <div class="d-title" id="dTitle"></div>
     <div class="d-meta" id="dMeta"></div>
     <div class="d-content" id="dContent"></div>
+    <div id="dVideo" style="display:none;margin-top:28px"></div>
     <div class="d-images" id="dImages"></div>
     <div id="dEmbedUrl" style="margin-top:32px;display:none"></div>
     <div id="dInlineContent" style="margin-top:32px"></div>
@@ -441,14 +452,14 @@ if('serviceWorker' in navigator){
       <textarea id="wContent" placeholder="공지 내용을 입력하세요"></textarea>
     </div>
     <div class="f-group">
-      <label>블로그 글 URL (선택) — Blogger 등 게시된 글 주소를 넣으면 본문에 그대로 펼쳐서 보여줍니다</label>
+      <label>블로그 글 또는 유튜브 URL (선택) — 블로그 글은 본문에 펼쳐서, 유튜브 주소는 동영상 플레이어로 보여줍니다</label>
       <input type="url" id="wEmbedUrl" placeholder="https://smct00.blogspot.com/2026/06/blog-post_13.html">
     </div>
     <div class="f-group">
-      <label>파일 첨부 (이미지·PDF·문서 등)</label>
+      <label>파일 첨부 (이미지·PDF·문서·동영상 등) — MP4 동영상은 게시글에서 바로 재생됩니다</label>
       <div class="img-thumbs" id="imgThumbs"></div>
       <input type="file" id="imgInput" accept="image/*" multiple style="display:none" onchange="addImages(this.files)">
-      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx,.zip,.txt,.html,.htm" multiple style="display:none" onchange="addFiles(this.files)">
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx,.zip,.txt,.html,.htm,.mp4,.webm,.m4v,.mov" multiple style="display:none" onchange="addFiles(this.files)">
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
         <button type="button" onclick="openImgChooser()"
           style="background:transparent;border:1px dashed rgba(184,149,42,.3);
@@ -457,7 +468,7 @@ if('serviceWorker' in navigator){
         <button type="button" onclick="openFileChooser()"
           style="background:transparent;border:1px dashed rgba(100,149,237,.4);
           color:rgba(100,149,237,.8);padding:8px 16px;font-size:11px;cursor:pointer;
-          font-family:'Noto Sans KR',sans-serif">📎 파일 첨부 (PDF·문서·엑셀 등)</button>
+          font-family:'Noto Sans KR',sans-serif">📎 파일 첨부 (PDF·문서·동영상 등)</button>
       </div>
       <div id="filePreviews" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;"></div>
     </div>
@@ -565,6 +576,63 @@ function filterCat(cat,btn){
 
 function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+/* ── 동영상 첨부 지원 ─────────────────────────────────────
+   MP4 등 동영상은 notices.json 안에 넣지 않고 videos/ 폴더에 별도 파일로 올린 뒤,
+   게시글에는 파일 경로(url)만 저장합니다. 상세 화면에서는 바로 재생되는 플레이어로 보여줍니다. */
+var VIDEO_EXTS=['mp4','webm','m4v','mov'];
+var VIDEO_MAX_MB=90;
+function fileExt(name){ return ((name||'').split('.').pop()||'').toLowerCase(); }
+function isVideoFile(f){
+  if(!f)return false;
+  return (f.type&&f.type.indexOf('video/')===0)||VIDEO_EXTS.indexOf(fileExt(f.name))>-1;
+}
+function videoSrc(f){ return f.url||f.data||''; }
+function videoMime(f){
+  var ext=fileExt(f.name);
+  if(ext==='webm')return 'video/webm';
+  return 'video/mp4';
+}
+function youtubeEmbed(url){
+  var m=String(url||'').match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if(!m)return null;
+  return {src:'https://www.youtube.com/embed/'+m[1]+'?rel=0&playsinline=1',vertical:/\/shorts\//.test(String(url))};
+}
+function postHasVideo(p){
+  return !!((p.files&&p.files.some(isVideoFile))||youtubeEmbed(p.embedUrl));
+}
+function readFileAsDataURL(file){
+  return new Promise(function(resolve,reject){
+    var r=new FileReader();
+    r.onload=function(ev){resolve(ev.target.result);};
+    r.onerror=function(){reject(r.error);};
+    r.readAsDataURL(file);
+  });
+}
+/* 새로 첨부한 동영상(file 객체)을 하나씩 videos/ 폴더에 업로드하고, 성공하면 경로로 바꿔 둔다 */
+function uploadPendingVideos(){
+  var chain=Promise.resolve(true);
+  pendingFiles.forEach(function(f,i){
+    if(!f.file)return;
+    chain=chain.then(function(ok){
+      if(!ok)return false;
+      return readFileAsDataURL(f.file).then(function(dataUrl){
+        var safe=f.name.replace(/[^A-Za-z0-9._-]+/g,'_');
+        if(!/\.[A-Za-z0-9]+$/.test(safe))safe+='.mp4';
+        var path='videos/'+Date.now()+'_'+safe;
+        return ghUpload(path,dataUrl,'Upload video').then(function(res){
+          if(!res){
+            alert('⚠ 동영상 업로드에 실패했습니다: '+f.name+'\n인터넷 연결과 GitHub 토큰을 확인한 뒤 다시 저장해 주세요.\n(파일이 너무 크면 실패할 수 있습니다. 25MB 이하 권장)');
+            return false;
+          }
+          pendingFiles[i]={name:f.name,url:path,type:f.type||'video/mp4',size:f.size};
+          return true;
+        });
+      }).catch(function(){ alert('⚠ 동영상 파일을 읽지 못했습니다: '+f.name); return false; });
+    });
+  });
+  return chain;
+}
+
 function renderList(){
   var list=document.getElementById('noticeList');
   var filtered=curFilter==='전체'?posts:posts.filter(function(p){return p.cat===curFilter;});
@@ -585,6 +653,10 @@ function renderList(){
     var thumb = (p.images && p.images.length)
       ? '<img class="item-card-img" src="'+p.images[0]+'" alt="'+p.title+'">'
       : '<div class="item-card-img-placeholder"><div style="font-size:40px;opacity:.15">📋</div><div style="font-size:9px;letter-spacing:3px;color:rgba(184,149,42,.25);font-family:Noto Sans KR,sans-serif;margin-top:6px">NO IMAGE</div></div>';
+    var hasVideo = postHasVideo(p);
+    if(hasVideo){
+      thumb = '<div style="position:relative;overflow:hidden;min-height:200px">'+thumb+'<span class="play-badge">▶</span></div>';
+    }
 
     /* 추가 이미지 미리보기 (2장 이상이면) */
     var extraImgs = '';
@@ -596,9 +668,13 @@ function renderList(){
     }
 
     /* 파일 첨부 배지 */
-    var fileBadge = (p.files && p.files.length)
-      ? '<span style="font-size:9px;color:rgba(100,149,237,.6);letter-spacing:1px">📎 '+p.files.length+'개 파일</span>'
-      : '';
+    var plainFiles = (p.files||[]).filter(function(f){ return !isVideoFile(f); });
+    var fileBadge = (hasVideo
+      ? '<span style="font-size:9px;color:rgba(212,175,85,.75);letter-spacing:1px">🎬 동영상</span>'
+      : '')
+      + (plainFiles.length
+      ? '<span style="font-size:9px;color:rgba(100,149,237,.6);letter-spacing:1px">📎 '+plainFiles.length+'개 파일</span>'
+      : '');
 
     return '<div class="item-card'+(p.pin==='1'?' pinned':'')+'" onclick="openDetail(\''+p.id+'\')">'
       +(isAdmin?'<div class="item-card-actions on"><button class="ic-edit" onclick="event.stopPropagation();openEdit(\''+p.id+'\')" title="수정">✏</button><button class="ic-del" onclick="event.stopPropagation();delPost(\''+p.id+'\')" title="삭제">×</button></div>':'')
@@ -637,9 +713,32 @@ function openDetail(id){
   var hasHtmlFileEmbed = !!(p.files && p.files.some(function(f){ return f.name.toLowerCase().endsWith('.html') || f.name.toLowerCase().endsWith('.htm'); }));
   var hasInlineEmbed = hasHtmlFileEmbed || !!p.embedUrl;
 
+  /* 동영상 첨부 → 바로 재생되는 플레이어 (첫 번째 사진은 동영상 표지로 사용) */
+  var videoFiles=(p.files||[]).filter(isVideoFile);
+  var poster=(videoFiles.length && p.images && p.images.length) ? p.images[0] : '';
+  var videoBox=document.getElementById('dVideo');
+  if(videoFiles.length){
+    videoBox.innerHTML=videoFiles.map(function(f){
+      var src=videoSrc(f);
+      return '<div class="d-video-wrap">'
+        +'<video class="d-video" controls playsinline preload="metadata"'
+        +(poster?' poster="'+escapeAttr(poster)+'"':'')
+        +' onloadedmetadata="if(this.videoWidth>this.videoHeight)this.parentNode.style.maxWidth=\'100%\'">'
+        +'<source src="'+escapeAttr(src)+'" type="'+videoMime(f)+'">'
+        +'이 브라우저에서는 동영상을 재생할 수 없습니다.</video>'
+        +'<div class="d-video-meta"><a href="'+escapeAttr(src)+'" download="'+escapeAttr(f.name)+'" target="_blank">⬇ 동영상 저장</a></div>'
+        +'</div>';
+    }).join('');
+    videoBox.style.display='block';
+  } else {
+    videoBox.innerHTML='';
+    videoBox.style.display='none';
+  }
+
   var imgHtml='';
-  if(!hasInlineEmbed && p.images&&p.images.length){
-    imgHtml=p.images.map(function(src){
+  var showImgs=(p.images||[]).slice(poster?1:0);
+  if(!hasInlineEmbed && showImgs.length){
+    imgHtml=showImgs.map(function(src){
       return '<img src="'+src+'" alt="" style="cursor:pointer" onclick="openNoticeViewer(this.src)">';
     }).join('');
   }
@@ -653,6 +752,7 @@ function openDetail(id){
     var htmlFiles=[], otherFiles=[];
     p.files.forEach(function(f){
       var isHtmlFile = f.name.toLowerCase().endsWith('.html') || f.name.toLowerCase().endsWith('.htm');
+      if(isVideoFile(f)){ return; }   /* 동영상은 위 플레이어로 표시 */
       if(isHtmlFile){ htmlFiles.push(f); } else { otherFiles.push(f); }
     });
     htmlFiles.forEach(function(f,i){
@@ -688,7 +788,15 @@ function openDetail(id){
 
   /* 블로그 URL(embedUrl)이 있으면 — Blogger 등 게시된 페이지를 그대로 iframe으로 임베드 */
   var embedBox=document.getElementById('dEmbedUrl');
-  if(p.embedUrl){
+  var yt=youtubeEmbed(p.embedUrl);
+  if(yt){
+    /* 유튜브 주소 → 동영상 플레이어 (쇼츠는 세로 9:16) */
+    embedBox.style.display='block';
+    embedBox.innerHTML='<div class="d-yt" style="max-width:'+(yt.vertical?'440px':'100%')+';aspect-ratio:'+(yt.vertical?'9 / 16':'16 / 9')+'">'
+      +'<iframe src="'+escapeAttr(yt.src)+'" title="YouTube video" loading="lazy" '
+      +'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
+      +'allowfullscreen></iframe></div>';
+  } else if(p.embedUrl){
     embedBox.style.display='block';
     embedBox.innerHTML='<iframe src="'+escapeAttr(p.embedUrl)+'" loading="lazy" '
       +'style="width:100%;height:1400px;border:none;display:block;border-radius:6px;background:#fff" '
@@ -806,6 +914,10 @@ function openDetail(id){
 }
 
 function goBack(){
+  /* 목록으로 돌아갈 때 재생 중인 동영상 정지 */
+  document.querySelectorAll('#detailView video').forEach(function(v){ try{v.pause();}catch(e){} });
+  var ytBox=document.getElementById('dEmbedUrl');
+  if(ytBox && ytBox.querySelector('.d-yt')){ ytBox.innerHTML=''; ytBox.style.display='none'; }
   document.getElementById('detailView').classList.remove('on');
   document.getElementById('mainView').style.display='block';
   viewId=null;
@@ -871,6 +983,26 @@ function savePost(){
   if(!title){alert('제목을 입력해주세요.');return;}
   if(!content){alert('내용을 입력해주세요.');return;}
 
+  /* 새로 첨부한 동영상이 있으면 먼저 videos/ 폴더에 업로드한 뒤 글을 저장 */
+  var saveBtn=document.getElementById('wmSave');
+  if(saveBtn && saveBtn.disabled) return;
+  var hasNewVideo=pendingFiles.some(function(f){ return !!f.file; });
+  if(hasNewVideo && saveBtn){
+    saveBtn.disabled=true;
+    saveBtn.setAttribute('data-label',saveBtn.textContent);
+    saveBtn.textContent='🎬 동영상 업로드 중… 창을 닫지 마세요';
+  }
+  uploadPendingVideos().then(function(ok){
+    if(saveBtn && saveBtn.disabled){
+      saveBtn.disabled=false;
+      saveBtn.textContent=saveBtn.getAttribute('data-label')||'✓ 저장하기';
+    }
+    if(!ok) return;
+    commitPost(title,content,embedUrl);
+  });
+}
+
+function commitPost(title,content,embedUrl){
   if(editId){
     var p=posts.find(function(x){return x.id===editId;});
     if(p){
@@ -958,7 +1090,14 @@ function ghSaveJSON(path,data){var json=JSON.stringify(data);var b64=btoa(unesca
 function ghLoadJSON(path){return fetch(path+'?t='+Date.now()).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
 
 
-function saveData(){ ghSaveJSON('data/notices.json',posts); }
+function saveData(){
+  return ghSaveJSON('data/notices.json',posts).then(function(r){
+    if(!r){
+      alert('⚠ 홈페이지 서버(GitHub) 저장에 실패했습니다.\n지금 보이는 내용은 이 화면에만 있고, 새로고침하면 사라질 수 있습니다.\n인터넷 연결과 GitHub 토큰을 확인한 뒤 다시 저장해 주세요.');
+    }
+    return r;
+  });
+}
 
 
 
@@ -1043,11 +1182,22 @@ function getFileIcon(name){
   if(['zip','rar'].includes(ext)) return '🗜️';
   if(['txt'].includes(ext)) return '📃';
   if(['html','htm'].includes(ext)) return '🌐';
+  if(['mp4','webm','m4v','mov'].includes(ext)) return '🎬';
   return '📎';
 }
 
 function addFiles(files){
   Array.from(files).forEach(function(f){
+    if(isVideoFile(f)){
+      /* 동영상은 저장할 때 videos/ 폴더로 따로 업로드 (글 데이터에 넣지 않음) */
+      if(f.size>VIDEO_MAX_MB*1024*1024){
+        alert('동영상이 너무 큽니다 ('+(f.size/1048576).toFixed(1)+'MB).\n'+VIDEO_MAX_MB+'MB 이하로 줄여서 올려 주세요. (25MB 이하 권장)');
+        return;
+      }
+      pendingFiles.push({name:f.name,type:f.type||'video/mp4',file:f,size:f.size});
+      renderFilePreviews();
+      return;
+    }
     var r=new FileReader();
     r.onload=function(ev){
       pendingFiles.push({name:f.name,data:ev.target.result,type:f.type});
@@ -1072,6 +1222,8 @@ function renderFilePreviews(){
 function openFileData(idx){
   var f=pendingFiles[idx];
   if(!f)return;
+  if(f.file){ window.open(URL.createObjectURL(f.file),'_blank'); return; }
+  if(isVideoFile(f)){ window.open(videoSrc(f),'_blank'); return; }
   var isHtml=f.name.toLowerCase().endsWith('.html')||f.name.toLowerCase().endsWith('.htm');
   var isPdf=f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf');
   var isImg=f.type.startsWith('image/');
