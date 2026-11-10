@@ -609,6 +609,22 @@ function readFileAsDataURL(file){
   });
 }
 /* 새로 첨부한 동영상(file 객체)을 하나씩 videos/ 폴더에 업로드하고, 성공하면 경로로 바꿔 둔다 */
+/* 공지 사진: 글 데이터에 통째로 넣지 않고 images/notice/ 폴더에 파일로 올린 뒤 주소만 저장 (공지 데이터 용량 관리) */
+function uploadPendingImages(){
+  var folder='images/notice/'+(editId||('n'+Date.now()));
+  var chain=Promise.resolve();
+  pendingImgs.forEach(function(src,i){
+    if(typeof src!=='string'||src.indexOf('data:image/')!==0) return;
+    chain=chain.then(function(){
+      var ext=/^data:image\/png/.test(src)?'png':'jpg';
+      var path=folder+'/img_'+Date.now()+'_'+i+'.'+ext;
+      return ghUpload(path,src,'Upload notice image').then(function(res){
+        if(res) pendingImgs[i]='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/'+GH_BRANCH+'/'+res;
+      });
+    });
+  });
+  return chain.then(function(){ return true; });
+}
 function uploadPendingVideos(){
   var chain=Promise.resolve(true);
   pendingFiles.forEach(function(f,i){
@@ -992,7 +1008,13 @@ function savePost(){
     saveBtn.setAttribute('data-label',saveBtn.textContent);
     saveBtn.textContent='🎬 동영상 업로드 중… 창을 닫지 마세요';
   }
-  uploadPendingVideos().then(function(ok){
+  var hasNewImg=pendingImgs.some(function(x){ return typeof x==='string'&&x.indexOf('data:image/')===0; });
+  if(hasNewImg && saveBtn && !saveBtn.disabled){
+    saveBtn.disabled=true;
+    saveBtn.setAttribute('data-label',saveBtn.textContent);
+    saveBtn.textContent='🖼 사진 올리는 중… 창을 닫지 마세요';
+  }
+  uploadPendingImages().then(function(){ return uploadPendingVideos(); }).then(function(ok){
     if(saveBtn && saveBtn.disabled){
       saveBtn.disabled=false;
       saveBtn.textContent=saveBtn.getAttribute('data-label')||'✓ 저장하기';
@@ -1042,7 +1064,18 @@ function addImages(files){
   Array.from(files).forEach(function(f){
     if(!f.type.startsWith('image/'))return;
     var r=new FileReader();
-    r.onload=function(ev){pendingImgs.push(ev.target.result);renderImgThumbs();};
+    r.onload=function(ev){
+      var src=ev.target.result, img=new Image();
+      img.onload=function(){
+        var M=1920, w=img.naturalWidth, h=img.naturalHeight, k=Math.min(1,M/Math.max(w,h));
+        if(k>=1 && src.length<1500000){ pendingImgs.push(src); renderImgThumbs(); return; }
+        var c=document.createElement('canvas'); c.width=Math.round(w*k); c.height=Math.round(h*k);
+        var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+        pendingImgs.push(c.toDataURL('image/jpeg',0.85)); renderImgThumbs();
+      };
+      img.onerror=function(){ pendingImgs.push(src); renderImgThumbs(); };
+      img.src=src;
+    };
     r.readAsDataURL(f);
   });
 }
