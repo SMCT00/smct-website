@@ -626,7 +626,7 @@ body.in-studio{background:var(--bg)}
       <h1>완성된 우리 집을,<strong>공사 전에 먼저 만나보세요</strong></h1>
       <p class="lead">단지를 찾으면 평면이 그려지고, 실제로 판매 중인 마루·벽지·필름·타일·창호를 <b>인기순</b>으로 골라 방마다 꾸밉니다. 원하는 제품이 없으면 사진으로 요청하세요. 마지막엔 <b>빛과 그림자까지 계산한 포토 렌더</b>와 <b>AI 설계 해설·견적</b>으로 완성된 모습을 미리 받아 보실 수 있습니다.</p>
       <div class="feat">
-        <div><i>I</i><b>우리 단지 찾기</b><span>광주·나주 1,000여 단지 · 평면 타입</span></div>
+        <div><i>I</i><b>우리 단지 찾기</b><span>광주·나주·화순·장성·담양 1,000여 단지</span></div>
         <div><i>II</i><b>실제 판매 자재</b><span>인기순 · 품번까지 · 사진 요청</span></div>
         <div><i>III</i><b>포토 렌더</b><span>경로추적 · 간접광 · 반사</span></div>
         <div><i>IV</i><b>AI 해설 · 견적</b><span>방별 공사비 · 공정표</span></div>
@@ -723,9 +723,11 @@ body.in-studio{background:var(--bg)}
     <button class="x" data-close>×</button>
     <h3>🔐 관리자 — AI 인테리어</h3>
     <div class="adm-sec">
-      <h4>이용코드 발급</h4>
-      <div class="f3"><label>고객명<input class="inp" id="admName"></label><label>연락처<input class="inp" id="admPhone" inputmode="tel"></label><label>유효기간<select class="inp" id="admDays"><option value="7">7일</option><option value="14" selected>14일</option><option value="30">30일</option><option value="90">90일</option></select></label></div>
-      <button class="btn gold" id="admMake">코드 발급</button>
+      <h4>승인코드 보내기</h4>
+      <p class="tiny">신청 메일이 오면 아래 승인코드 하나만 보내면 됩니다. 고객이 처음 입력한 때부터 <b>3일간</b> 이용할 수 있습니다.</p>
+      <div class="code-big" id="admCommon">…</div>
+      <div class="f3"><label>고객명<input class="inp" id="admName"></label><label>연락처<input class="inp" id="admPhone" inputmode="tel"></label><label>유효기간<input class="inp" value="3일 (고정)" readonly></label></div>
+      <div class="row"><button class="btn gold" id="admMake">보낼 문구 만들기</button><button class="btn line" id="admMakeOne" title="3일이 지난 고객에게 다시 열어줄 때">기간 끝난 고객용 재발급 코드</button></div>
       <div id="admOut" class="adm-out" hidden></div>
     </div>
     <div class="adm-sec">
