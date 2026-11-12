@@ -2612,7 +2612,7 @@ function renderStep3() {
         <div id="rsBody">${body}</div>
         <div class="rs-next">${(() => { const i = tabs.indexOf(tab); const nx = tabs[i + 1]; return nx ? `<button class="btn line" data-tab-room="${esc(nx.key)}">다음 공간: ${nx.icon} ${esc(nx.name)} →</button>` : `<button class="btn gold" data-go="4">3D 전체 보기 →</button>`; })()}</div>
       </div>
-      <aside class="rs-right"><button type="button" class="v3-tog" id="v3Tog" aria-label="3D 화면 접기·펼치기"></button><div id="viewHost3" class="view-host"></div><div class="mini-plan">${planSVG(PLAN, resolveLook(), { noFurn: 0, hl: r ? (k === 'kitchen' ? PLAN.rooms.filter(x => x.type === 'kitchen' || x.type === 'dining').map(x => x.name) : k === 'balcony' ? PLAN.rooms.filter(x => x.type === 'balcony' || x.type === 'util').map(x => x.name) : [r.name]) : [] })}</div></aside>
+      <aside class="rs-right"><button type="button" class="v3-tog" id="v3Tog" aria-label="3D 화면 접기·펼치기"></button><button type="button" class="v3-big" id="v3Big" aria-label="3D 화면 크게 보기·닫기"></button><div id="viewHost3" class="view-host"></div><div class="mini-plan">${planSVG(PLAN, resolveLook(), { noFurn: 0, hl: r ? (k === 'kitchen' ? PLAN.rooms.filter(x => x.type === 'kitchen' || x.type === 'dining').map(x => x.name) : k === 'balcony' ? PLAN.rooms.filter(x => x.type === 'balcony' || x.type === 'util').map(x => x.name) : [r.name]) : [] })}</div></aside>
     </div>
   </div>`;
   $$('[data-tab-room]').forEach(b => b.onclick = () => { ST.tab = b.dataset.tabRoom; save(); renderStep3(); const rs = $('#rsTabs .on'); if (rs && rs.scrollIntoView) rs.scrollIntoView({ block: 'nearest', inline: 'center' }); if (window.innerWidth < 1080) window.scrollTo(0, 0); });
@@ -3282,6 +3282,7 @@ __smctReady( () => {
 /* 휴대폰: 공간별 꾸미기에서 3D 화면 접기·펼치기 (자재를 넓게 보며 고를 수 있게) */
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('#v3Tog'); if (!b) return;
+  document.body.classList.remove('v3-full');
   document.body.classList.toggle('v3-min');
   if (!document.body.classList.contains('v3-min')) setTimeout(() => { try { resizeViewer(); } catch (err) { } }, 60);
 });
@@ -3374,4 +3375,28 @@ __smctReady(() => {
   let pend = 0;
   new MutationObserver(() => { if (pend) return; pend = setTimeout(() => { pend = 0; tag(); }, 80); }).observe(document.body, { childList: true, subtree: true });
   tag();
+});
+
+
+/* 휴대폰: 3D 크게 보기(전체 화면) + 큰 화면 안내 */
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('#v3Big'); if (!b) return;
+  document.body.classList.remove('v3-min');
+  document.body.classList.toggle('v3-full');
+  [60, 260].forEach(ms => setTimeout(() => { try { resizeViewer(); } catch (err) { } }, ms));
+});
+__smctReady(() => {
+  // 단계가 바뀌면 전체 화면 3D는 닫는다
+  const st = document.getElementById('studio');
+  if (st) new MutationObserver(() => { const s3 = document.getElementById('step3'); if (document.body.classList.contains('v3-full') && (!s3 || s3.hidden)) document.body.classList.remove('v3-full'); }).observe(st, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+  // 휴대폰 안내 (한 번 닫으면 다시 안 뜸)
+  try {
+    if (innerWidth <= 760 && !localStorage.getItem('smct_ai_mtip')) {
+      const tip = document.createElement('div'); tip.className = 'm-tip';
+      tip.innerHTML = '<div><b>휴대폰에서도 이용할 수 있습니다</b><span>3D와 견적표는 PC·태블릿의 큰 화면에서 더 자세히 보입니다. 휴대폰에서는 3D 화면의 「⤢ 크게」, 평면도의 「🔍 확대」를 눌러 크게 보세요.</span></div><button type="button" aria-label="안내 닫기">확인</button>';
+      const body = document.querySelector('#studio .studio-body') || st;
+      if (body) body.insertBefore(tip, body.firstChild);
+      tip.querySelector('button').onclick = () => { tip.remove(); try { localStorage.setItem('smct_ai_mtip', '1'); } catch (e) { } };
+    }
+  } catch (e) { }
 });
