@@ -381,6 +381,10 @@ body.in-studio{background:var(--bg)}
 .hero h1{word-break:keep-all;font-weight:300;font-size:clamp(32px,3.9vw,56px);line-height:1.22;letter-spacing:-.5px}
 .hero h1 strong{font-weight:600;background:var(--goldg);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{font-weight:300;font-size:16.5px;line-height:1.85;color:rgba(245,240,230,.74)}
+/* 접수 양식(.lead.card)은 첫 화면 소개문(.lead)과 이름이 같아 글자색이 흐려지던 문제 — 양식은 진한 글자로 */
+.lead.card{color:#151413;font-weight:400;font-size:15px;line-height:1.65}
+.lead.card b{color:inherit}
+.lead.card .lbl{color:#151413;font-size:14px}
 .feat{gap:0;margin-top:44px;border-top:1px solid rgba(201,166,90,.28);border-bottom:1px solid rgba(201,166,90,.28)}
 .feat div{border:0;border-right:1px solid rgba(201,166,90,.18);border-radius:0;background:none;padding:18px 16px}
 .feat div:last-child{border-right:0}
@@ -407,7 +411,8 @@ body.in-studio{background:var(--bg)}
 .card{border-radius:4px;border-color:var(--line);padding:26px;box-shadow:0 1px 0 rgba(0,0,0,.02),0 24px 48px -34px rgba(70,52,20,.28)}
 .card h2{font-weight:500;font-size:23px;letter-spacing:-.2px}
 .num{font-family:var(--disp);font-size:15px;font-style:italic;border:0;border-bottom:1px solid var(--gold);border-radius:0;padding:0 2px;color:var(--gold)}
-.chip{border-radius:2px;background:#FBF9F5}
+.chip{border-radius:2px;background:#FBF9F5;color:#151413;border-color:#b9ad97}
+.chip:not(.on):hover{border-color:#B8952A}
 .chip.on{background:#151413;border-color:#151413;color:var(--champ)}
 .stepper{padding:22px 20px 8px;gap:0}
 .stepper li{border-radius:0;border:0;border-bottom:1px solid var(--line);background:none!important;padding:12px 14px;font-size:13.5px;letter-spacing:.3px}
