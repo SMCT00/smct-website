@@ -2540,7 +2540,7 @@ function optCards(cat, s, onPick, opt) {
     ${brands ? `<div class="brands">${brands.map(b => `<button class="chip ${b.id === curB ? 'on' : ''}" data-brand="${b.id}">${b.n}</button>`).join('')}</div>` : ''}
     <div class="opts">${opt.same ? `<button class="opt ${opt.isSame ? 'on' : ''}" data-opt="__same"><span class="ck">${opt.isSame ? '●' : '○'}</span><span class="on-t"><b>집 전체와 같게</b><small>${esc(opt.same)}</small></span></button>` : ''}${list.map(o => {
       const on = cat.multi ? (s.list || []).includes(o.id) : (!opt.isSame && s.o === o.id);
-      const pr = o.lines ? o.lines.map(l => `${l.price.toLocaleString()}원/${l.unit}`).join(' + ') : o.consult ? '별도 상담' : o.price ? `${o.price.toLocaleString()}원/${o.unit}` : '0원';
+      const pr = o.lines ? o.lines.map(l => `${l.price.toLocaleString()}원/${l.unit}`).join(' + ') : o.consult ? '별도 상담' : o.price ? `${o.price.toLocaleString()}원/${o.unit}` : (cat.id === 'upper' ? '주방 가구 가격에 포함 (추가 비용 없음)' : '추가 비용 없음');
       const bn = cat.id === 'door' && o.brand ? (brands.find(b => b.id === curB) || {}).n + ' ' : '';
       return `<button class="opt ${on ? 'on' : ''}" data-opt="${o.id}"><span class="ck">${cat.multi ? (on ? '☑' : '☐') : (on ? '●' : '○')}</span><span class="on-t"><b>${bn}${o.name}</b><small>${pr}${o.note ? ' · ' + o.note : ''}</small>${(o.tags || []).map(t => `<i class="tag">${t}</i>`).join('')}</span></button>`;
     }).join('')}</div>
@@ -2608,6 +2608,7 @@ function renderStep3() {
     <div class="rs-grid">
       <div class="rs-left">
         <div class="rs-head"><div><h2>${tab.icon} ${esc(tab.name)}</h2><small>${r ? `${r1(k === 'kitchen' ? PLAN.rooms.filter(x => x.type === 'kitchen' || x.type === 'dining').reduce((a, x) => a + x.area, 0) : r.area)}㎡ · 오른쪽 3D가 이 공간 안을 보여줍니다` : '집 전체에 적용되는 공통 항목'}</small></div>${cost ? `<div class="rs-cost"><small>이 공간 공사비</small><b>${man(cost)}</b></div>` : ''}</div>
+        <div class="rs-nav">${(() => { const i = tabs.indexOf(tab), pv = tabs[i - 1], nx = tabs[i + 1]; return (pv ? `<button class="btn line" data-tab-room="${esc(pv.key)}">← ${pv.icon} ${esc(pv.name)}</button>` : '<span></span>') + `<small>${i + 1} / ${tabs.length}</small>` + (nx ? `<button class="btn gold" data-tab-room="${esc(nx.key)}">다음: ${nx.icon} ${esc(nx.name)} →</button>` : `<button class="btn gold" data-go="4">3D 전체 보기 →</button>`); })()}</div>
         <div id="rsBody">${body}</div>
         <div class="rs-next">${(() => { const i = tabs.indexOf(tab); const nx = tabs[i + 1]; return nx ? `<button class="btn line" data-tab-room="${esc(nx.key)}">다음 공간: ${nx.icon} ${esc(nx.name)} →</button>` : `<button class="btn gold" data-go="4">3D 전체 보기 →</button>`; })()}</div>
       </div>
@@ -2773,7 +2774,7 @@ function renderLeadForm() {
       <label>반려동물<input class="inp" id="lPets" placeholder="예) 소형견 1" value="${esc(L.pets || '')}"></label>
       <label>현장 실측 방문 *<select class="inp" id="lVisit">${['', '방문 희망', '전화 상담 먼저', '방문 불필요'].map(v => `<option ${v === L.visit ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
       <label>상담 가능 시간<input class="inp" id="lTime" placeholder="예) 평일 저녁 6시 이후" value="${esc(L.time || '')}"></label>
-      <label>알게 된 경로<select class="inp" id="lSource">${['', '네이버 검색', '인스타그램', '유튜브', '지인 소개', '현수막·전단', 'SMCT 홈페이지', '기타'].map(v => `<option ${v === L.source ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      <label>알게 된 경로<select class="inp" id="lSource">${(() => { const opts = ['', '포털 검색 (네이버·다음·구글)', '인스타그램', '유튜브', '블로그', '지인 소개', '현수막·전단', 'SMCT 홈페이지', '직접 입력']; const cur = !L.source ? '' : opts.includes(L.source) ? L.source : '직접 입력'; return opts.map(v => `<option ${v === cur ? 'selected' : ''}>${v}</option>`).join(''); })()}</select><input class="inp" id="lSourceEtc" style="margin-top:6px" placeholder="어떻게 알게 되셨는지 적어 주세요" value="${esc(L.sourceEtc || '')}" ${L.sourceEtc ? '' : 'hidden'}></label>
     </div>
     <div class="lbl">공사 목적 * (여러 개 선택)</div>
     <div class="chips" id="lPurp">${PURPOSES.map(p => `<button class="chip ${(L.purposes || []).includes(p) ? 'on' : ''}" data-p="${p}">${p}</button>`).join('')}</div>
@@ -2786,12 +2787,13 @@ function renderLeadForm() {
     <div class="msg" id="leadMsg"></div>
   </div>`;
   $$('#lPurp .chip').forEach(b => b.onclick = () => b.classList.toggle('on'));
+  $('#lSource').onchange = () => { const e = $('#lSourceEtc'); e.hidden = $('#lSource').value !== '직접 입력'; if (!e.hidden) e.focus(); };
   $('#leadBtn').onclick = submitLead;
   bindPriv();
 }
 function collectLead() {
   const v = id => ($('#' + id) || {}).value ? $('#' + id).value.trim() : '';
-  return { name: v('lName'), phone: v('lPhone'), email: v('lEmail'), complex: v('lComplex'), dong: v('lDong'), addr: v('lAddr'), living: v('lLiving'), start: v('lStart'), budget: v('lBudget'), family: v('lFamily'), pets: v('lPets'), visit: v('lVisit'), time: v('lTime'), source: v('lSource'), intent: v('lIntent'), purposes: $$('#lPurp .chip.on').map(b => b.dataset.p), agree: $('#lAgree').checked, mkt: $('#lMkt').checked };
+  return { name: v('lName'), phone: v('lPhone'), email: v('lEmail'), complex: v('lComplex'), dong: v('lDong'), addr: v('lAddr'), living: v('lLiving'), start: v('lStart'), budget: v('lBudget'), family: v('lFamily'), pets: v('lPets'), visit: v('lVisit'), time: v('lTime'), source: (v('lSource') === '직접 입력' ? (v('lSourceEtc') || '직접 입력') : v('lSource')), sourceEtc: (v('lSource') === '직접 입력' ? v('lSourceEtc') : ''), intent: v('lIntent'), purposes: $$('#lPurp .chip.on').map(b => b.dataset.p), agree: $('#lAgree').checked, mkt: $('#lMkt').checked };
 }
 function leadMsg(h, err) { $('#leadMsg').innerHTML = `<span class="${err ? 'err' : 'ok'}">${h}</span>`; }
 function estText() { return EST.lines.map(l => `[${l.catName}] ${l.name} — ${l.qty}${l.unit} × ${l.price.toLocaleString()} = ${l.amt.toLocaleString()}원${l.consult ? ' (별도 상담)' : ''}${l.incl ? ' (기본 포함)' : ''}`).join('\n') + `\n소계 ${EST.sub.toLocaleString()}원 / 현장관리·공과잡비 ${EST.overhead.toLocaleString()}원 / 합계 ${EST.total.toLocaleString()}원 (VAT 별도)`; }
@@ -2801,7 +2803,7 @@ async function submitLead() {
   const miss = [];
   if (!L.name) miss.push('성함'); if (!L.phone) miss.push('연락처'); if (!L.complex) miss.push('단지명'); if (!L.dong) miss.push('동·호수'); if (!L.addr) miss.push('주소');
   if (!L.living) miss.push('거주 상태'); if (!L.start) miss.push('착공 시기'); if (!L.budget) miss.push('예산'); if (!L.family) miss.push('가족 구성'); if (!L.visit) miss.push('실측 방문');
-  if (!L.purposes.length) miss.push('공사 목적'); if (L.intent.length < 5) miss.push('원하시는 점');
+  if (!L.purposes.length) miss.push('공사 목적'); if (!L.intent) miss.push('원하시는 점');
   if (miss.length) return leadMsg('다음 항목을 입력해 주세요: ' + miss.join(', '), 1);
   if (!/\d{2,3}-?\d{3,4}-?\d{4}/.test(L.phone)) return leadMsg('연락처 형식을 확인해 주세요.', 1);
   if (!L.agree) return leadMsg('개인정보 수집·이용 동의가 필요합니다.', 1);
@@ -2841,13 +2843,35 @@ function renderResults() {
   $('#step6').innerHTML = `
   <div class="res-head card">
     <div><h2>${adm ? '관리자 미리보기' : '접수가 완료되었습니다'}</h2><p class="muted">${adm ? '관리자 모드라 정보 입력 없이 결과물이 열려 있습니다.' : `접수번호 <b>${esc(ST.leadId || '')}</b> · SMCT 담당자가 영업일 기준 1일 이내 연락드립니다.`}</p></div>
-    <div class="res-btns"><button class="btn gold" id="printBtn">📄 리포트 PDF 저장 / 인쇄</button><button class="btn line" id="toView">3D 다시 보기</button>${ST.submitted ? '<button class="btn line" id="resetLead">정보 다시 입력</button>' : ''}</div>
+    <div class="res-btns"><button class="btn gold" id="printBtn">📄 리포트 PDF 저장 / 인쇄</button><button class="btn line" id="mailBtn">📧 메일로 받기</button><button class="btn line" id="toView">3D 다시 보기</button>${ST.submitted ? '<button class="btn line" id="resetLead">정보 다시 입력</button>' : ''}</div>
+    <div class="res-info">
+      <b>결과물은 어디에 있나요?</b>
+      <ul>
+        <li>견적서와 설계 리포트는 <b>이 화면</b>에 있습니다. 같은 휴대폰·PC의 같은 브라우저로 다시 들어오면 그대로 보입니다.</li>
+        <li><b>파일로 보관</b>하려면 「리포트 PDF 저장 / 인쇄」를 누르고, 인쇄 화면에서 <b>PDF로 저장</b>을 고르세요.</li>
+        <li>PDF 저장이 어렵거나 휴대폰이라 불편하면 <b>「메일로 받기」</b>를 누르세요. 담당자가 견적서와 리포트를 메일로 보내드립니다. (발송 08:00~17:00)</li>
+        <li>3D 사진은 아래 「저장한 3D 장면」에서 사진마다 <b>저장</b>을 누르면 됩니다.</li>
+      </ul>
+      <div class="msg" id="mailMsg"></div>
+    </div>
   </div>
   <div class="card"><h3>상세 견적서</h3><p class="tiny">${esc(projTitle())} · ${styleOf().name} · ${GRADES[ST.info.grade - 1].name} · ${CFG.PRICE_DATE} 단가 · 표준 평면 기준 개략 견적</p>${estTableHTML()}</div>
   <div class="card ai"><div class="ai-head"><span class="ai-badge">AI</span><div><h2>설계 리포트</h2><small>전체 공개</small></div></div>${S.map(s => `<section class="ai-sec"><h3>${s.t}</h3><div class="ai-body">${s.h}</div></section>`).join('')}</div>
   ${(ST.custom || []).length ? `<div class="card"><h3>고객 요청 품목 <small class="muted">— 상담 후 같은 제품 또는 가장 가까운 정품으로 확정</small></h3>${customHTML()}</div>` : ''}
-  <div class="card"><h3>저장한 3D 장면</h3>${SNAPS.length ? `<div class="snaps">${SNAPS.map(s => `<figure><img src="${s.d}" alt=""><figcaption>${esc(s.t)}</figcaption></figure>`).join('')}</div>` : '<p class="tiny">3D 화면에서 「📸 장면 저장」이나 「📷 포토 렌더」를 누르면 이곳과 PDF 리포트에 들어갑니다.</p>'}</div>`;
+  <div class="card"><h3>저장한 3D 장면</h3>${SNAPS.length ? `<div class="snaps">${SNAPS.map((s, n) => `<figure><img src="${s.d}" alt=""><figcaption>${esc(s.t)} <button class="lnk" data-snap-save="${n}">저장</button></figcaption></figure>`).join('')}</div>` : '<p class="tiny">3D 화면에서 「📸 장면 저장」이나 「📷 포토 렌더」를 누르면 이곳과 PDF 리포트에 들어갑니다.</p>'}</div>`;
   $('#printBtn').onclick = printReport;
+  $$('[data-snap-save]', $('#step6')).forEach(b => b.onclick = () => { const s = SNAPS[+b.dataset.snapSave]; if (s) saveImage(s.d, `SMCT_AI인테리어_${String(s.t || '장면').replace(/\s/g, '')}.jpg`); });
+  $('#mailBtn').onclick = async () => {
+    const L = ST.lead || {}, msg = (h, err) => { $('#mailMsg').innerHTML = `<span class="${err ? 'err' : 'ok'}">${h}</span>`; };
+    const email = (prompt('결과물을 받을 메일 주소를 입력해 주세요.', L.email || '') || '').trim();
+    if (!email) return;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return msg('메일 주소 형식을 확인해 주세요.', 1);
+    const btn = $('#mailBtn'); btn.disabled = true; btn.textContent = '요청 보내는 중…';
+    const ok = await postForm({ _subject: `[SMCT AI인테리어] 결과물 메일 발송 요청 — ${L.name || '관리자 미리보기'} / ${email}`, 구분: 'AI 인테리어 결과물 메일 발송 요청', 접수번호: ST.leadId || '', 성함: L.name || '', 연락처: L.phone || '', 보낼메일: email, 단지명: L.complex || ST.info.complex || '', 평형: sizeLabel(), 예상공사비: man(EST.total), 견적내역: estText(), 설계데이터: designData(), 요청시각: new Date().toLocaleString('ko-KR') });
+    btn.disabled = false; btn.textContent = '📧 메일로 받기';
+    if (ok) { ST.lead = Object.assign({}, L, { email }); save(); msg(`✓ 요청되었습니다. <b>${esc(email)}</b>로 견적서와 리포트를 보내드립니다. (발송 08:00~17:00, 그 외 시간 요청은 다음 발송 시간에)`); ga('mail_request'); }
+    else msg(`요청을 보내지 못했습니다. <a href="tel:${CFG.PHONE}">${CFG.PHONE}</a>로 연락 주시면 바로 보내드립니다.`, 1);
+  };
   $('#toView').onclick = () => goStep(4);
   if ($('#resetLead')) $('#resetLead').onclick = () => { ST.submitted = false; save(); renderStep6(); };
 }
@@ -2965,7 +2989,7 @@ function openPhotoRender() {
   $$('#ptQ button').forEach(b => b.onclick = () => { if (PT.running) { PT.stop = true; PT.discard = true; } q = b.dataset.q; $$('#ptQ button').forEach(x => x.classList.toggle('on', x === b)); setTimeout(start, 120); });
   $('#ptStop').onclick = () => { PT.stop = true; };
   $('#hqSave').onclick = () => { if (!result) return; SNAPS.unshift({ d: result, t: roomTxt + ' (포토 렌더)' }); if (SNAPS.length > 6) SNAPS.pop(); toast('리포트에 담았습니다'); closePT(); };
-  $('#hqDown').onclick = () => { if (!result) return; const a = document.createElement('a'); a.href = result; a.download = `SMCT_AI인테리어_${roomTxt.replace(/\s/g, '')}.jpg`; a.click(); };
+  $('#hqDown').onclick = () => { if (!result) return; saveImage(result, `SMCT_AI인테리어_${roomTxt.replace(/\s/g, '')}.jpg`); };
   const closePT = () => { if (PT.running) { PT.stop = true; PT.discard = true; } m.hidden = true; };
   $$('[data-close]', m).forEach(b => b.onclick = closePT);
   m.onclick = e => { if (e.target === m) closePT(); };
@@ -3005,6 +3029,24 @@ function compressImage(file, max, q) {
     };
     rd.onerror = rej; rd.readAsDataURL(file);
   });
+}
+/* 이미지 저장 — PC는 바로 내려받기, 휴대폰은 공유(사진 앱에 저장) → 안 되면 길게 눌러 저장하는 화면 */
+async function saveImage(url, name) {
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (!mobile) { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); return; }
+  try {
+    const f = new File([dataURLtoBlob(url)], name, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  let sh = document.getElementById('saveSheet');
+  if (!sh) {
+    sh = document.createElement('div'); sh.id = 'saveSheet';
+    sh.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(10,10,9,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px';
+    document.body.appendChild(sh);
+  }
+  sh.innerHTML = `<p style="color:#f5f1e8;font-size:15px;line-height:1.7;text-align:center;margin:0;word-break:keep-all"><b style="color:#D9B768">사진을 길게 눌러 「이미지 저장」</b>을 선택하세요.<br><span style="font-size:13px;color:rgba(245,241,232,.66)">카카오톡·네이버 앱 안에서 열었다면 오른쪽 위 ⋮(또는 ⋯) → 「다른 브라우저로 열기」에서 다시 하면 저장이 잘 됩니다.</span></p><img src="${url}" alt="" style="max-width:100%;max-height:62vh;border:1px solid rgba(245,241,232,.2)"><button class="btn gold" style="min-width:160px">닫기</button>`;
+  sh.hidden = false; sh.style.display = 'flex';
+  sh.querySelector('button').onclick = () => { sh.style.display = 'none'; };
 }
 function dataURLtoBlob(u) { const [h, b] = u.split(','), m = h.match(/:(.*?);/)[1], s = atob(b), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return new Blob([a], { type: m }); }
 
