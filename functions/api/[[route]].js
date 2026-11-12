@@ -5,7 +5,8 @@
 const enc = new TextEncoder();
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const EPOCH = Date.UTC(2026, 0, 1), DAY = 864e5;
-const COOKIE = 'smct_ai';
+const COOKIE = 'smct_ai', COOKIE0 = 'smct_ai_c0';
+const PASS_DAYS = 3; // 승인코드 이용 기간(일) — 고정
 
 const configured = env => !!(env.AI_CODE_SECRET && env.AI_ADMIN_PW && String(env.AI_CODE_SECRET).length >= 16 && String(env.AI_ADMIN_PW).length >= 8);
 
@@ -28,6 +29,21 @@ async function makeCode(env, days) {
   for (let i = 0; i < 8; i++) { s = B32[n % 32] + s; n = Math.floor(n / 32); }
   return { code: 'SMCT-' + s.slice(0, 4) + '-' + s.slice(4), exp: EPOCH + exp * DAY + DAY - 1 };
 }
+/* ---------- 공통 승인코드: 신청이 오면 이 코드 하나를 보낸다 (비밀값에서 계산되므로 소스에는 드러나지 않는다) ---------- */
+const COMMON_PAYLOAD = 4095 * 256;
+async function commonCode(env) {
+  let n = COMMON_PAYLOAD * 1048576 + await codeSig(env, COMMON_PAYLOAD), s = '';
+  for (let i = 0; i < 8; i++) { s = B32[n % 32] + s; n = Math.floor(n / 32); }
+  return 'SMCT-' + s.slice(0, 4) + '-' + s.slice(4);
+}
+/* 공통 코드를 이 브라우저에서 처음 쓴 시각 (서명된 쿠키) */
+async function firstUseCookie(env, t0) { return `${COOKIE0}=${t0}.${b64u(await hmac('c0|' + sessKey(env), String(t0)))}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${400 * 86400}`; }
+async function readFirstUse(env, request) {
+  const m = (request.headers.get('Cookie') || '').match(new RegExp('(?:^|;\\s*)' + COOKIE0 + '=(\\d+)\\.([^;]+)'));
+  if (!m) return 0;
+  if (!sameBytes(enc.encode(b64u(await hmac('c0|' + sessKey(env), m[1]))), enc.encode(m[2]))) return 0;
+  const t = +m[1]; return t > 0 && t <= Date.now() ? t : 0;
+}
 async function checkCode(env, input) {
   let s = String(input || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
   if (s.startsWith('SMCT')) s = s.slice(4);
@@ -37,6 +53,7 @@ async function checkCode(env, input) {
   for (const c of s) { const i = B32.indexOf(c); if (i < 0) return { ok: false, why: '사용할 수 없는 문자가 있습니다.' }; n = n * 32 + i; }
   const sig = n % 1048576, payload = Math.floor(n / 1048576);
   if (await codeSig(env, payload) !== sig) return { ok: false, why: '유효하지 않은 코드입니다.' };
+  if (payload === COMMON_PAYLOAD) return { ok: true, common: true, code: 'SMCT-' + s.slice(0, 4) + '-' + s.slice(4) };
   const exp = EPOCH + Math.floor(payload / 256) * DAY + DAY - 1;
   if (Date.now() > exp) return { ok: false, why: '사용 기간이 끝난 코드입니다. 재발급을 요청해 주세요.' };
   return { ok: true, exp, code: 'SMCT-' + s.slice(0, 4) + '-' + s.slice(4) };
@@ -73,8 +90,9 @@ async function readSession(env, request) {
 
 const json = (data, status = 200, cookie) => {
   const h = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
-  if (cookie) h['Set-Cookie'] = cookie;
-  return new Response(JSON.stringify(data), { status, headers: h });
+  const hs = new Headers(h);
+  [].concat(cookie || []).forEach(c => hs.append('Set-Cookie', c));
+  return new Response(JSON.stringify(data), { status, headers: hs });
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -95,6 +113,13 @@ async function handleApi(request, env) {
   if (action === 'code') {
     const r = await checkCode(env, body.code);
     if (!r.ok) { await sleep(500); return json(r, 200); }
+    if (r.common) {
+      // 공통 승인코드: 이 브라우저에서 처음 입력한 때부터 PASS_DAYS일
+      if (sess && sess.role === 'admin') return json({ ok: true, exp: Date.now() + PASS_DAYS * DAY, code: r.code });
+      const t0 = (await readFirstUse(env, request)) || Date.now(), exp = t0 + PASS_DAYS * DAY;
+      if (Date.now() > exp) { await sleep(500); return json({ ok: false, why: `이용 기간(${PASS_DAYS}일)이 끝났습니다. 연장은 062-522-1212로 문의해 주세요.` }, 200); }
+      return json({ ok: true, exp, code: r.code }, 200, [await sessionCookie(env, 'code', exp), await firstUseCookie(env, t0)]);
+    }
     if (sess && sess.role === 'admin') return json({ ok: true, exp: r.exp, code: r.code });
     return json({ ok: true, exp: r.exp, code: r.code }, 200, await sessionCookie(env, 'code', r.exp));
   }
@@ -107,9 +132,13 @@ async function handleApi(request, env) {
 
   if (action === 'make') {
     if (!sess || sess.role !== 'admin') return json({ ok: false, why: '관리자 로그인이 필요합니다.' }, 403);
-    const days = [7, 14, 30, 90].includes(+body.days) ? +body.days : 14;
-    const c = await makeCode(env, days);
+    const c = await makeCode(env, PASS_DAYS); // 유효기간은 항상 PASS_DAYS일
     return json({ ok: true, code: c.code, exp: c.exp });
+  }
+
+  if (action === 'common') {
+    if (!sess || sess.role !== 'admin') return json({ ok: false, why: '관리자 로그인이 필요합니다.' }, 403);
+    return json({ ok: true, code: await commonCode(env), days: PASS_DAYS });
   }
   return json({ ok: false, why: '알 수 없는 요청입니다.' }, 400);
 }
