@@ -252,6 +252,11 @@ label .inp{margin-top:4px}
 .etab .gh td{background:#f7f3ec;font-weight:700;color:#4a4237}
 .etab tfoot td{font-weight:600}
 .etab .tot td{font-size:15px;font-weight:800;border-top:2px solid var(--ink)}
+/* 견적표 숫자: 줄바꿈 없이, 자릿수 맞춰서 */
+.etab td:nth-child(n+2),.etab th:nth-child(n+2){white-space:nowrap;font-variant-numeric:lining-nums tabular-nums}
+.etab td:first-child{word-break:keep-all}
+.etab th:nth-child(4),.etab td:nth-child(4){padding:0;width:0}
+@media(max-width:600px){.etab{font-size:12.5px}.etab th,.etab td{padding:7px 3px}.etab td:first-child,.etab th:first-child{padding-left:6px}.etab td:last-child,.etab th:last-child{padding-right:6px}.etab .tot td{font-size:14px}}
 .snaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
 .snaps img{width:100%;border-radius:10px;display:block}
 .snaps figcaption{font-size:12px;color:var(--muted);margin-top:4px}
@@ -442,10 +447,12 @@ body.in-studio{background:var(--bg)}
 .view-host{border-radius:4px;background:#e7e3dc}
 .vt{background:rgba(255,255,255,.86);backdrop-filter:blur(10px)}
 .bottom-bar{background:rgba(11,11,12,.9);backdrop-filter:blur(16px);border-top:1px solid rgba(201,166,90,.28)}
-.bb-est b{font-family:var(--disp);font-size:24px;font-weight:600;background:var(--goldg);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bb-est b{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:-.2px;font-variant-numeric:lining-nums tabular-nums;background:var(--goldg);-webkit-background-clip:text;background-clip:text;color:transparent}
 .modal-box{border-radius:4px}
 .ai-badge{border-radius:2px;background:var(--goldg);color:#111}
-.est .big{font-family:var(--disp);font-weight:600}
+.est .big{font-family:var(--serif);font-weight:600;letter-spacing:-.3px;font-variant-numeric:lining-nums tabular-nums}
+/* 금액·숫자는 높이가 고른 숫자꼴로 (장식 글꼴의 들쭉날쭉한 옛 숫자꼴 방지) */
+body{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1}
 .ptype{border-radius:3px}
 .apt-res{border-radius:3px}
 .edit-bar{border-radius:3px;background:#151413}
