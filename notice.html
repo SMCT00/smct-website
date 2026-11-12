@@ -593,7 +593,7 @@ function isVideoFile(f){
   if(!f)return false;
   return (f.type&&f.type.indexOf('video/')===0)||VIDEO_EXTS.indexOf(fileExt(f.name))>-1;
 }
-function videoSrc(f){ return f.url||f.data||''; }
+function videoSrc(f){ var u=f.url||f.data||''; return /^videos\//.test(u)?MEDIA_BASE+u:u; }
 function videoMime(f){
   var ext=fileExt(f.name);
   if(ext==='webm')return 'video/webm';
@@ -626,7 +626,7 @@ function uploadPendingImages(){
       var ext=/^data:image\/png/.test(src)?'png':'jpg';
       var path=folder+'/img_'+Date.now()+'_'+i+'.'+ext;
       return ghUpload(path,src,'Upload notice image').then(function(res){
-        if(res) pendingImgs[i]='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/'+GH_BRANCH+'/'+res;
+        if(res) pendingImgs[i]=MEDIA_BASE+res;
       });
     });
   });
@@ -644,7 +644,7 @@ function uploadPendingVideos(){
         var path='videos/'+Date.now()+'_'+safe;
         return ghUpload(path,dataUrl,'Upload video').then(function(res){
           if(!res){
-            alert('⚠ 동영상 업로드에 실패했습니다: '+f.name+'\n인터넷 연결과 GitHub 토큰을 확인한 뒤 다시 저장해 주세요.\n(파일이 너무 크면 실패할 수 있습니다. 25MB 이하 권장)');
+            alert('⚠ 동영상 업로드에 실패했습니다: '+f.name+'\n인터넷 연결과 GitHub 토큰을 확인한 뒤 다시 저장해 주세요.');
             return false;
           }
           pendingFiles[i]={name:f.name,url:path,type:f.type||'video/mp4',size:f.size};
@@ -1125,9 +1125,54 @@ function getGHToken(){
   }
   return t;
 }
-function ghUpload(path,b64,msg){var token=getGHToken();if(!token)return Promise.resolve(null);var pure=b64.indexOf(',')>-1?b64.split(',')[1]:b64;var url='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+path;return fetch(url,{headers:{'Authorization':'token '+token}}).then(function(r){return r.ok?r.json():null;}).then(function(ex){var body={message:msg||'Upload',content:pure,branch:GH_BRANCH};if(ex&&ex.sha)body.sha=ex.sha;return fetch(url,{method:'PUT',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});}).then(function(r){return r.ok?r.json():null;}).then(function(d){return d?path:null;}).catch(function(){return null;});}
+/* ── 사진·영상 저장소: Cloudflare(media.smct00.co.kr) ──
+   images/ · videos/ 파일은 GitHub 대신 Cloudflare에 저장하고, 예전 GitHub 주소는 불러올 때 새 주소로 바꿔 읽는다. */
+var MEDIA_BASE='https://media.smct00.co.kr/',CF_UP='https://smct-upload.smct00.workers.dev/upload',GH_RAW_BASE='https://raw.githubusercontent.com/SMCT00/smct-website/main/';
+function isMediaPath(p){return /^(images|videos)\//.test(p||'');}
+function mediaFix(v){
+  if(typeof v==='string'){return v.indexOf(GH_RAW_BASE)>-1?v.split(GH_RAW_BASE+'images/').join(MEDIA_BASE+'images/').split(GH_RAW_BASE+'videos/').join(MEDIA_BASE+'videos/'):v;}
+  if(Array.isArray(v)){for(var i=0;i<v.length;i++)v[i]=mediaFix(v[i]);return v;}
+  if(v&&typeof v==='object'){for(var k in v){if(Object.prototype.hasOwnProperty.call(v,k))v[k]=mediaFix(v[k]);}}
+  return v;
+}
+function dataUrlToBlob(d){
+  var a=d.indexOf(',')>-1?d.split(','):['data:application/octet-stream;base64',d];
+  var m=(a[0].match(/:(.*?);/)||[])[1]||'application/octet-stream',b=atob(a[1]),n=b.length,u=new Uint8Array(n);
+  while(n--)u[n]=b.charCodeAt(n);
+  return new Blob([u],{type:m});
+}
+/* 큰 사진은 올리기 전에 긴 변 2560px로 줄인다 (화질은 거의 그대로, 용량은 1/5~1/10) */
+function shrinkImage(path,dataUrl){
+  return new Promise(function(res){
+    if(!/\.jpe?g$/i.test(path)||!/^data:image\//.test(dataUrl)||dataUrl.length<1200000){res(dataUrl);return;}
+    var im=new Image();
+    im.onload=function(){
+      try{
+        var w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,2560/Math.max(w,h));
+        var c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        var out=c.toDataURL('image/jpeg',0.86);
+        res(out.length>1000&&out.length<dataUrl.length?out:dataUrl);
+      }catch(e){res(dataUrl);}
+    };
+    im.onerror=function(){res(dataUrl);};
+    im.src=dataUrl;
+  });
+}
+function cfUpload(path,dataUrl){
+  var token=getGHToken();if(!token)return Promise.resolve(null);
+  return shrinkImage(path,dataUrl).then(function(d){
+    return fetch(CF_UP+'?key='+encodeURIComponent(path),{method:'PUT',headers:{'Authorization':'token '+token},body:dataUrlToBlob(d)});
+  }).then(function(r){
+    if(r.ok)return path;
+    if(r.status===401||r.status===403){alert('토큰 인증 실패! 다시 업로드하면 새 토큰을 입력할 수 있습니다.');localStorage.removeItem('smct_gh_token');}
+    else{alert('업로드 실패 ('+r.status+'). 다시 시도해주세요.');}
+    return null;
+  }).catch(function(){alert('업로드 실패 (연결 오류). 인터넷 연결을 확인한 뒤 다시 시도해주세요.');return null;});
+}
+function ghUpload(path,b64,msg){if(isMediaPath(path))return cfUpload(path,b64);var token=getGHToken();if(!token)return Promise.resolve(null);var pure=b64.indexOf(',')>-1?b64.split(',')[1]:b64;var url='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+path;return fetch(url,{headers:{'Authorization':'token '+token}}).then(function(r){return r.ok?r.json():null;}).then(function(ex){var body={message:msg||'Upload',content:pure,branch:GH_BRANCH};if(ex&&ex.sha)body.sha=ex.sha;return fetch(url,{method:'PUT',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});}).then(function(r){return r.ok?r.json():null;}).then(function(d){return d?path:null;}).catch(function(){return null;});}
 function ghSaveJSON(path,data){var json=JSON.stringify(data);var b64=btoa(unescape(encodeURIComponent(json)));return ghUpload(path,b64,'Update data');}
-function ghLoadJSON(path){return fetch(path+'?t='+Date.now()).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
+function ghLoadJSON(path){return fetch(path+'?t='+Date.now()).then(function(r){return r.ok?r.json():[];}).then(mediaFix).catch(function(){return [];});}
 
 
 function saveData(){
@@ -1231,7 +1276,7 @@ function addFiles(files){
     if(isVideoFile(f)){
       /* 동영상은 저장할 때 videos/ 폴더로 따로 업로드 (글 데이터에 넣지 않음) */
       if(f.size>VIDEO_MAX_MB*1024*1024){
-        alert('동영상이 너무 큽니다 ('+(f.size/1048576).toFixed(1)+'MB).\n'+VIDEO_MAX_MB+'MB 이하로 줄여서 올려 주세요. (25MB 이하 권장)');
+        alert('동영상이 너무 큽니다 ('+(f.size/1048576).toFixed(1)+'MB).\n'+VIDEO_MAX_MB+'MB 이하로 줄여서 올려 주세요.');
         return;
       }
       pendingFiles.push({name:f.name,type:f.type||'video/mp4',file:f,size:f.size});
