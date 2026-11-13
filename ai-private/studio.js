@@ -1106,6 +1106,18 @@ async function initViewer(host) {
   const camera = new T.PerspectiveCamera(48, 1, 0.03, 300);
   const controls = new V.Orbit(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = 0.08;
+  {
+    // 방 안 시점은 카메라가 제자리라서 휠·두 손가락 확대가 안 되던 문제 → 화각으로 확대·축소
+    const el = renderer.domElement, zoomFov = k => { camera.fov = Math.max(24, Math.min(84, camera.fov * k)); camera.updateProjectionMatrix(); };
+    el.addEventListener('wheel', e => { if (V.view !== 'room') return; e.preventDefault(); e.stopPropagation(); zoomFov(e.deltaY > 0 ? 1.09 : 1 / 1.09); }, { passive: false, capture: true });
+    const tp = new Map(); let td = 0;
+    el.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') return; tp.set(e.pointerId, [e.clientX, e.clientY]); if (tp.size === 2) { const a = [...tp.values()]; td = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); } });
+    el.addEventListener('pointermove', e => { if (!tp.has(e.pointerId)) return; tp.set(e.pointerId, [e.clientX, e.clientY]); if (tp.size === 2 && V.view === 'room') { const a = [...tp.values()], d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); if (td > 0 && d > 0) zoomFov(td / d); td = d; } });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => el.addEventListener(n, e => { tp.delete(e.pointerId); td = 0; }));
+    // 그래픽 장치가 끊기면(메모리 부족 등) 화면이 멈춘다 → 복구되면 다시 그린다
+    el.addEventListener('webglcontextlost', e => { e.preventDefault(); V.ctxLost = true; });
+    el.addEventListener('webglcontextrestored', () => { V.ctxLost = false; V.composer = null; V.fxFail = false; V.sig = null; try { for (const k in MATS) delete MATS[k]; } catch (e) { } try { rebuild3D(); } catch (e) { } });
+  }
   const pmrem = new T.PMREMGenerator(renderer);
   V.envTex = pmrem.fromScene(new V.RoomEnv(), 0.04).texture;
   Object.assign(V, { renderer, scene, camera, controls, host, ready: true });
@@ -1322,7 +1334,7 @@ function build3D(plan, look) {
   // 정리
   if (V.root) scene.remove(V.root);
   V.meshes.forEach(g => g.dispose()); V.meshes = [];
-  if (V.lights) V.lights.forEach(l => scene.remove(l));
+  if (V.lights) V.lights.forEach(l => { scene.remove(l); try { if (l.shadow && l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; } if (l.dispose) l.dispose(); } catch (e) { } });
   const root = new T.Group(); V.root = root; scene.add(root);
   const walls = new T.Group(); root.add(walls); V.walls = walls;
   const ceilG = new T.Group(); root.add(ceilG); V.ceilG = ceilG;
@@ -1450,12 +1462,12 @@ function build3D(plan, look) {
   for (const f of plan.furn) drawFurn(root, f, F, M, look);
   if (!sketch) {
     // 커튼 (거실·방 창 양옆) — 주름은 가는 원기둥을 겹쳐 표현
-    const curtM = mat({ type: 'flat', color: look.curtain || '#ece7dd', rough: 0.95 }), railM = F.black;
+    const curtM = mat({ type: 'flat', color: look.curtain || '#ece7dd', rough: 0.95 }), railM = mat({ type: 'flat', color: '#cfc8bb', rough: 0.6 });
     for (const wn of plan.windows) {
       if (!['living', 'master', 'bed', 'study'].includes(wn.room.type) || wn.w < 1.2) continue;
       const zc = wn.seg.c, dir = Math.sign(wn.room.cy - zc) || 1, z = zc + dir * 0.17, top = H - 0.06, pw = Math.min(0.5, wn.w * 0.16);
       box(root, wn.c, top + 0.012, z, wn.w + 0.5, 0.018, 0.018, railM, { noCast: 1, noEdge: 1 });
-      for (const sd of [-1, 1]) for (let i = 0; i < 5; i++) rbox(root, wn.c + sd * (wn.w / 2 + 0.18 - pw * (i + 0.5) / 5), top / 2 + 0.01, z + (i % 2 ? 0.02 : -0.02), pw / 5 + 0.02, top - 0.02, 0.05, curtM, 0.022);
+      for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) { const cm = rbox(root, wn.c + sd * (wn.w / 2 + 0.18 - pw * (i + 0.5) / 3), top / 2 + 0.01, z + (i % 2 ? 0.012 : -0.012), pw / 3 + 0.03, top - 0.02, 0.06, curtM, 0.028, { noCast: 1 }); if (cm) cm.receiveShadow = false; }
     }
     // 소파 뒤 벽 액자 (소파가 벽에 붙어 있을 때만)
     for (const f of plan.furn) {
@@ -2316,7 +2328,8 @@ function goStep(n) {
 const rebuild3D = debounce(() => {
   if (!V.ready || !PLAN) return;
   const sig = sig3D(); if (V.sig === sig && V.plan === PLAN) return;
-  V.sig = sig; build3D(PLAN, resolveLook());
+  try { build3D(PLAN, resolveLook()); V.sig = sig; }
+  catch (e) { V.sig = null; console.error('build3D', e); if (!rebuild3D.retried) { rebuild3D.retried = 1; setTimeout(() => { try { rebuild3D(); } finally { setTimeout(() => { rebuild3D.retried = 0; }, 800); } }, 300); } else toast('3D 화면을 다시 그리지 못했습니다. 다른 항목을 한 번 눌러 보거나 새로고침해 주세요.'); return; }
   if (V.view === 'room' && !PLAN.rooms.some(r => r.id === V.roomId)) { setOverview(); V.mkey = null; }
 }, 120);
 // 3D 뷰어는 단계 화면을 다시 그릴 때 지워지지 않도록 잠시 body로 옮겨 둔다
@@ -2715,7 +2728,7 @@ async function mountViewer(sel, focusRoomId) {
     await initViewer($('#vCanvas'));
     $('#vLoading').hidden = true;
     const sig = sig3D(); let built = false;
-    if (V.sig !== sig || !V.plan || V.plan !== PLAN) { V.sig = sig; build3D(PLAN, resolveLook()); built = true; }
+    if (V.sig !== sig || !V.plan || V.plan !== PLAN) { try { build3D(PLAN, resolveLook()); V.sig = sig; built = true; } catch (e2) { V.sig = null; console.error('build3D', e2); setTimeout(() => { try { rebuild3D(); } catch (e3) { } }, 300); } }
     resizeViewer();
     const fid = focusRoomId !== undefined ? focusRoomId : V.roomId;
     const key = sel + '|' + (fid || '') + '|' + PLAN.rooms.length + PLAN.W;
@@ -2849,7 +2862,7 @@ function renderResults() {
       <ul>
         <li>견적서와 설계 리포트는 <b>이 화면</b>에 있습니다. 같은 휴대폰·PC의 같은 브라우저로 다시 들어오면 그대로 보입니다.</li>
         <li><b>파일로 보관</b>하려면 「리포트 PDF 저장 / 인쇄」를 누르고, 인쇄 화면에서 <b>PDF로 저장</b>을 고르세요.</li>
-        <li>PDF 저장이 어렵거나 휴대폰이라 불편하면 <b>「메일로 받기」</b>를 누르세요. 담당자가 견적서와 리포트를 메일로 보내드립니다. (발송 08:00~17:00)</li>
+        <li>PDF 저장이 어렵거나 휴대폰이라 불편하면 <b>「메일로 받기」</b>를 누르세요. 바로 자동으로 가는 메일이 아니라, 담당자가 확인한 뒤 견적서와 리포트를 보내드립니다. (발송 08:00~17:00)</li>
         <li>3D 사진은 아래 「저장한 3D 장면」에서 사진마다 <b>저장</b>을 누르면 됩니다.</li>
       </ul>
       <div class="msg" id="mailMsg"></div>
@@ -2869,7 +2882,7 @@ function renderResults() {
     const btn = $('#mailBtn'); btn.disabled = true; btn.textContent = '요청 보내는 중…';
     const ok = await postForm({ _subject: `[SMCT AI인테리어] 결과물 메일 발송 요청 — ${L.name || '관리자 미리보기'} / ${email}`, 구분: 'AI 인테리어 결과물 메일 발송 요청', 접수번호: ST.leadId || '', 성함: L.name || '', 연락처: L.phone || '', 보낼메일: email, 단지명: L.complex || ST.info.complex || '', 평형: sizeLabel(), 예상공사비: man(EST.total), 견적내역: estText(), 설계데이터: designData(), 요청시각: new Date().toLocaleString('ko-KR') });
     btn.disabled = false; btn.textContent = '📧 메일로 받기';
-    if (ok) { ST.lead = Object.assign({}, L, { email }); save(); msg(`✓ 요청되었습니다. <b>${esc(email)}</b>로 견적서와 리포트를 보내드립니다. (발송 08:00~17:00, 그 외 시간 요청은 다음 발송 시간에)`); ga('mail_request'); }
+    if (ok) { ST.lead = Object.assign({}, L, { email }); save(); msg(`✓ 요청이 접수되었습니다. 자동 발송이 아니라 <b>담당자가 확인한 뒤</b> <b>${esc(email)}</b>로 견적서와 리포트를 보내드립니다. 발송 시간은 08:00~17:00이며, 그 외 시간 요청은 다음 발송 시간에 보내드립니다. 급하시면 <a href="tel:${CFG.PHONE}">${CFG.PHONE}</a>로 연락 주세요.`); ga('mail_request'); }
     else msg(`요청을 보내지 못했습니다. <a href="tel:${CFG.PHONE}">${CFG.PHONE}</a>로 연락 주시면 바로 보내드립니다.`, 1);
   };
   $('#toView').onclick = () => goStep(4);
@@ -3399,4 +3412,13 @@ __smctReady(() => {
       tip.querySelector('button').onclick = () => { tip.remove(); try { localStorage.setItem('smct_ai_mtip', '1'); } catch (e) { } };
     }
   } catch (e) { }
+});
+
+
+/* 상단 머리띠 높이를 재서, 공간 탭·3D 화면이 그 바로 아래에 붙게 한다 (노트북에서 탭이 머리띠 밑으로 들어가던 문제) */
+__smctReady(() => {
+  const head = document.querySelector('header.top'); if (!head) return;
+  const set = () => document.documentElement.style.setProperty('--top-h', Math.round(head.getBoundingClientRect().height) + 'px');
+  set(); addEventListener('resize', set);
+  if (window.ResizeObserver) new ResizeObserver(set).observe(head);
 });
