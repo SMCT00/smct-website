@@ -319,13 +319,13 @@ label .inp{margin-top:4px}
 #planBox svg{touch-action:none}
 #planBox.editing,#planBox.editing *{user-select:none;-webkit-user-select:none}
 #photoBox img{width:100%;border-radius:8px;border:1px solid var(--line);margin-top:4px}
-.rs-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;position:sticky;top:60px;z-index:5;background:var(--bg)}
+.rs-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;position:sticky;top:var(--top-h,60px);z-index:5;background:var(--bg)}
 .rs-tabs::-webkit-scrollbar{display:none}
 .rt{flex:none;display:flex;align-items:center;gap:5px;border:1px solid var(--line);background:#fff;border-radius:22px;padding:8px 14px;font-size:13.5px;white-space:nowrap}
 .rt.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .rs-grid{display:grid;grid-template-columns:minmax(0,1fr) 46%;gap:18px;align-items:start}
 .rs-grid>*{min-width:0}
-.rs-right{position:sticky;top:116px;display:flex;flex-direction:column;gap:8px}
+.rs-right{position:sticky;top:calc(var(--top-h,60px) + 58px);display:flex;flex-direction:column;gap:8px}
 .v3-tog{display:none}
 .v3-big{display:none}
 .m-tip{display:flex;gap:12px;align-items:center;background:#141416;color:#f5f1e8;border:1px solid rgba(212,175,85,.5);padding:12px 14px;margin:0 0 12px;font-size:13px;line-height:1.6}
@@ -446,7 +446,7 @@ body.in-studio{background:var(--bg)}
 .opt.on{background:#FFFAF0;border-color:var(--gold);box-shadow:inset 3px 0 0 var(--gold)}
 .opt .ck{color:var(--gold)}
 .tag{border-radius:2px}
-.rs-tabs{background:linear-gradient(var(--bg) 70%,rgba(245,242,236,0))}
+.rs-tabs{background:var(--bg);box-shadow:0 8px 8px -9px rgba(0,0,0,.28)}
 .rt{border-radius:2px;background:#fff;letter-spacing:.2px}
 .rt.on{background:#151413;color:var(--champ);border-color:#151413}
 .rs-head h2{font-weight:500;font-size:26px}
@@ -547,7 +547,7 @@ body{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1}
 @media(max-width:1080px){
   .p2{grid-template-columns:1fr}.p2-side{position:static}
   .rs-grid{grid-template-columns:minmax(0,1fr)}
-  .rs-right{position:sticky;top:104px;order:-1;z-index:4;flex-direction:row}
+  .rs-right{position:sticky;top:calc(var(--top-h,54px) + 50px);order:-1;z-index:4;flex-direction:row}
   .rs-right .view-host{height:34vh;min-height:220px;flex:1}
   .v3-tog{display:block;position:absolute;right:10px;bottom:-15px;z-index:6;height:30px;padding:0 14px;border:1px solid var(--gold);background:#141416;color:#D4AF55;font-size:12px;letter-spacing:.5px;border-radius:15px;box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
   .v3-tog::after{content:'3D 접기 ▲'}
@@ -574,8 +574,8 @@ body{font-variant-numeric:lining-nums;font-feature-settings:'lnum' 1}
 }
 @media(max-width:860px){
   .ptypes{grid-template-columns:1fr 1fr}
-  .rs-tabs{top:54px}
-  .rs-right{top:98px}
+  .rs-tabs{top:var(--top-h,54px)}
+  .rs-right{top:calc(var(--top-h,54px) + 44px)}
   .rs-head h2{font-size:19px}
   .vt{gap:5px;padding:6px}
   .vt .tg{font-size:11.5px}
