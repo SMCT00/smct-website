@@ -8,6 +8,7 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-VNZCXBJV3Z');
+    gtag('config', 'AW-18510884691');
   </script>
 <title>문의·연락처 | 에스엠씨티건설 ☎ 062-522-1212</title>
 <meta charset="UTF-8">
@@ -365,6 +366,8 @@ if('serviceWorker' in navigator){
       });
 
       if(res.ok){
+        // Google Ads 전환: 홈페이지 견적문의 접수
+        try { if (typeof gtag === 'function') { gtag('event', 'conversion', {'send_to': 'AW-18510884691/7mAeCNi_jLodENPe1vpE'}); gtag('event', 'generate_lead', {'form_name': 'contact'}); } } catch(_e) {}
         btn.textContent = '✓ 문의가 접수되었습니다';
         btn.style.background = '#1a3a16';
         btn.style.color = '#7ec87a';
